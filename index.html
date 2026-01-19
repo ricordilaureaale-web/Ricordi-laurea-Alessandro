@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ricordi Laurea Alessandro</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="card">
+    <h1>Hey Ciao 👋</h1>
+    <p class="sub">Se mi dedichi 2 minuti possiamo creare un bel ricordo per tutti di questa serata</p>
+
+    <!-- Barra di progresso -->
+    <div class="progress-wrap"><div class="progress" id="progress" style="width:0%"></div></div>
+    <!-- IFRAME nascosto per il POST al Form -->
+    <iframe name="hidden_iframe" id="hidden_iframe" class="hidden"></iframe>
+
+    <!-- FORM che invia al tuo Google Form senza aprirlo -->
+    <form id="gform"
+      action="https://docs.google.com/forms/d/1JQi4mdeecui8nj6S-6AUXiQNHUa4u7MHgdYqvoF4xag/formResponse"
+      method="POST" target="hidden_iframe" novalidate>
+
+      <!-- STEP 1: Nome e Cognome -->
+      <section class="step active" data-step="1">
+        <div class="row">
+          <div>
+            <label for="nome">Qual è il tuo Nome? *</label>
+            <input id="nome" name="entry.412462958" type="text" autocomplete="given-name" required />
+          </div>
+        </div>
+        <div class="error" id="err-step1">Inserisci Nome</div>
+        <div class="actions">
+          <a class="btn primary" href="bacheca.html">Vai alla bacheca</a>
+          <button type="button" class="btn secondary" disabled>Indietro</button>
+          <button type="button" class="btn primary" id="next1">Avanti</button>
+        </div>
+      </section>
+
+      <!-- STEP 3: SOLO Messaggio -->
+      <section class="step" data-step="3">
+        <label for="ricordo">Mi lasci un ricordo di stasera?</label>
+        <textarea id="ricordo" name="entry.476871126" placeholder="Scrivi qualcosa…"></textarea>
+
+        <!-- campi tecnici minimi -->
+        <input type="hidden" name="fvv" value="1" />
+        <input type="hidden" name="pageHistory" value="0" />
+
+        <div class="error" id="err-step3"></div>
+        <div class="actions">
+          <button type="button" class="btn secondary" id="back3">Indietro</button>
+          <button type="button" class="btn primary" id="next3">Avanti</button>
+        </div>
+      </section>
+
+      <!-- STEP 4: Foto -->
+      <section class="step" data-step="4">
+        <h3 style="margin:0 0 6px">Vuoi aggiungere delle foto?</h3>
+        <p class="sub">Premi il pulsante qui sotto: si aprirà una finestra per caricare foto/video.</p>
+
+        <!-- Codice risposta (usato per collegare foto e testo) -->
+        <input type="hidden" id="codiceRisposta" name="entry.697726659">
+
+        <!-- Messaggi di stato -->
+        <div id="fotoNotice" class="sub" style="margin:8px 0 12px"></div>
+
+        <!-- Azioni -->
+        <div class="actions">
+          <button type="button" class="btn secondary" id="back4">Indietro</button>
+          <button type="button" class="btn primary" id="openUpload">Carica le tue foto / video</button>
+          <a id="btnUpload" class="btn secondary hidden" href="#" rel="noopener">Apri in nuova scheda (fallback)</a>
+          <button type="button" class="btn next" id="next4">Ho finito</button>
+        </div>
+      </section>
+
+
+      <!-- STEP 5: Riepilogo -->
+      <section class="step" data-step="5">
+        <h3 style="margin:0 0 6px">Conferma</h3>
+        <p class="sub" id="confirmMsg"></p>
+
+        <div class="actions">
+          <button type="button" class="btn secondary" id="back5">Indietro</button>
+          <button type="submit" class="btn primary" id="btnSubmit">Invia</button>
+        </div>
+      </section>
+
+
+      <!-- STEP 6: Grazie -->
+      <section class="step" data-step="6">
+        <h2 style="margin:0 0 6px">Grazie mille! 🎉</h2>
+        <p class="sub">La tua risposta è stata registrata. Sei una persona speciale 💙</p>
+
+        <div class="actions">
+          <button type="button" class="btn start" id="backToStart">Compila di nuovo</button>
+          <a class="btn primary" href="bacheca.html">Vai alla bacheca</a>
+        </div>
+      </section>
+    </form>
+
+    <footer>Le tue risposte vengono registrate in modo sicuro tramite Google Forms.</footer>
+  </div>
+
+  <script>
+    (function(){
+      const openUpload = document.getElementById('openUpload');
+      const fotoNotice = document.getElementById('fotoNotice');
+      const codiceInput = document.getElementById('codiceRisposta');
+      const btnUpload = document.getElementById('btnUpload');
+
+      const steps = Array.from(document.querySelectorAll('.step'));
+      const progress = document.getElementById('progress');
+      const form = document.getElementById('gform');
+      const iFrame = document.getElementById('hidden_iframe');
+
+      const err1 = document.getElementById('err-step1');
+      const err2 = document.getElementById('err-step2');
+
+      const optAltro = document.getElementById('optAltro');
+      const altroTxt = document.getElementById('altroTxt');
+
+      const nome = document.getElementById('nome');
+      const cognome = document.getElementById('cognome');
+      const ricordo = document.getElementById('ricordo');
+      const confirmMsg = document.getElementById('confirmMsg');
+
+      // Navigazione
+      let current = 0; // indice step (0..5)
+      const total = steps.length; // 6
+
+      function showStep(idx){
+        steps.forEach((s,i)=>s.classList.toggle('active', i===idx));
+        // se siamo al primo step la barra resta vuota
+        const pct = idx === 0 ? 0 : Math.round((idx / (total-1)) * 100);
+        progress.style.width = pct + '%';
+      }
+      showStep(current);
+
+      // Gestione "Altro"
+      function refreshAltro(){
+        const isAltro = optAltro && optAltro.checked;
+        altroTxt.classList.toggle('hidden', !isAltro);
+        if (!isAltro) altroTxt.value = '';
+      }
+      document.querySelectorAll('input[name="entry.896447326"]').forEach(r=>{
+        r.addEventListener('change', refreshAltro);
+      });
+      // inizializza visibilità campo Altro
+      refreshAltro();
+
+      // Validazioni step
+      function validateStep1(){
+        const ok = nome.value.trim() && cognome.value.trim();
+        err1.classList.toggle('show', !ok);
+        return ok;
+      }
+
+      function validateStep2(){
+        const sel = document.querySelector('input[name="entry.896447326"]:checked');
+        if (!sel){ err2.classList.add('show'); return false; }
+        if (sel.value === '__other_option__' && !altroTxt.value.trim()){
+          err2.textContent = 'Specifica il campo “Altro”.';
+          err2.classList.add('show');
+          return false;
+        }
+        err2.textContent = 'Scegli un’opzione (specifica “Altro” se selezionato).';
+        err2.classList.remove('show');
+        return true;
+      }
+
+      // Aggiorna riepilogo (Step 5)
+      function updateSummary(){
+        const nomeClean = nome.value.trim();
+        confirmMsg.textContent = nomeClean
+          ? `Ok ${nomeClean}, se per te è tutto giusto premi “Invia”.`
+          : 'Se è tutto giusto, premi “Invia”.';
+      }
+
+      // Bottoni Next/Back
+      document.getElementById('next1').addEventListener('click', ()=>{
+        if (!validateStep1()) return;
+        current = 1; showStep(current);
+      });
+      document.getElementById('back2').addEventListener('click', ()=>{
+        current = 0; showStep(current);
+      });
+      document.getElementById('next2').addEventListener('click', ()=>{
+        if (!validateStep2()) return;
+        // passo allo step 3 (messaggio)
+        current = 2; showStep(current);
+      });
+      document.getElementById('back3').addEventListener('click', ()=>{
+        current = 1; showStep(current);
+      });
+
+      document.getElementById('next3').addEventListener('click', ()=>{
+        if (!codiceInput.value) codiceInput.value = makeCode();
+        current = 3; // indice 0-based dello Step 4
+        showStep(current);
+      });
+
+      document.getElementById('next4').addEventListener('click', ()=>{
+        // Tasto manuale "Ho finito" (se l’auto-advance non è scattato)
+        updateSummary();
+        current = 4; showStep(current);
+      });
+      document.getElementById('back4').addEventListener('click', ()=>{
+        // torna a Step 3 (Messaggio)
+        current = 2; showStep(current);
+      });
+      document.getElementById('back5').addEventListener('click', ()=>{
+        // torna a Step 4 (Foto)
+        current = 3; showStep(current);
+      });
+
+      document.getElementById('backToStart').addEventListener('click', ()=>{
+        current = 0; showStep(current);
+      });
+
+      openUpload.addEventListener('click', ()=>{
+        if (!codiceInput.value) codiceInput.value = makeCode();
+
+        const url = buildFotoUrl(codiceInput.value); // niente &embedded=true
+
+        // Prova pop-up
+        const popup = window.open(url, 'upload_foto', 'width=520,height=760,noopener,noreferrer');
+
+        if (!popup) {
+          // Pop-up bloccata → fallback
+          btnUpload.href = url;
+          btnUpload.classList.remove('hidden');
+        }
+
+        if (fotoNotice) {
+          fotoNotice.textContent = 'Carica le foto nella finestra che si è aperta. Quando hai finito, premi "Ho finito".';
+        }
+      });
+
+
+      // Invio senza lasciare la pagina
+      let submitted = false;
+      let iframeLoads = 0;
+
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+
+        if (!validateStep1()){ current=0; showStep(current); return; }
+        if (!validateStep2()){ current=1; showStep(current); return; }
+
+        if (submitted) return;
+        submitted = true;
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true; btn.textContent = 'Invio…';
+
+        // Disabilita i pulsanti di navigazione
+        document.querySelectorAll('.actions .btn').forEach(b => b.disabled = true);
+        // Lascio attivo solo il pulsante "Invio…" (già disabilitato) per feedback
+        btn.disabled = true;
+
+        const t = setTimeout(()=>{
+          if (submitted){
+            submitted = false;
+            btn.disabled = false; btn.textContent = 'Invia';
+            // Riabilita i pulsanti (timeout di sicurezza)
+            document.querySelectorAll('.actions .btn').forEach(b => b.disabled = false);
+          }
+        }, 10000);
+
+        form.submit();
+
+        function onIframeLoad(){
+          iframeLoads++;
+          if (iframeLoads >= 1 && submitted){
+            clearTimeout(t);
+            submitted = false;
+
+            // Ripristino UI
+            btn.disabled = false;
+            btn.textContent = 'Invia';
+            document.querySelectorAll('.actions .btn').forEach(b => b.disabled = false);
+
+            // Pulizia form
+            form.reset();
+            refreshAltro();
+
+            // Vai alla schermata di ringraziamento (Step 6)
+            current = 5;
+            showStep(current);
+          }
+        }
+
+        iFrame.addEventListener('load', onIframeLoad, { once: true });
+      });
+
+
+      // UX: aggiorna riepilogo live quando si scrive mentre si è allo step 5 (o in generale)
+      ;[nome, cognome, ricordo, altroTxt].forEach(el=>{
+        el.addEventListener('input', ()=>{
+          if (current>=4) updateSummary();
+        });
+      });
+    })();
+
+    // Genera un codice unico sufficientemente casuale
+    function makeCode(){
+      return 'R' + Date.now().toString(36) + Math.random().toString(36).slice(2,8).toUpperCase();
+    }
+
+    // CONFIG Form Foto
+    const FORM_FOTO_BASE = "https://docs.google.com/forms/d/1ogcXWlD7glhcYIX1KIxoPAGZkByk2bG_c9s-KnfnM4E/viewform";
+    const ENTRY_CODE_FOTO = "entry.496785438";
+
+    function buildFotoUrl(codice){
+      const p = new URLSearchParams();
+      p.set(ENTRY_CODE_FOTO, codice);
+      return `${FORM_FOTO_BASE}?usp=pp_url&${p.toString()}`;
+    }
+
+    function prepareUploadButton(codice){
+      if (btnUpload) btnUpload.href = buildFotoUrl(codice);
+    }
+
+  </script>
+</body>
+</html>

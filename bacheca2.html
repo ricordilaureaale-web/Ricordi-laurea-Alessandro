@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bacheca dei ricordi</title>
+  <link rel="stylesheet" href="bacheca.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Bacheca dei ricordi</h1>
+        <p class="sub">I messaggi inviati dal form, in tempo (quasi) reale.</p>
+      </div>
+      <div class="pill" id="countPill">—</div>
+    </header>
+
+    <div class="topbar">
+      <a class="btn secondary" href="index.html">⬅︎ Torna al form</a>
+    </div>
+
+    <div id="wall" class="grid"></div>
+    <p id="empty" class="empty">Ancora nessun messaggio.</p>
+
+    <div id="debug" style="display:none;"></div>
+  </div>
+
+  <script>
+    // ——— CATCH GLOBALE
+    window.addEventListener('error', e=>{
+      const d = document.getElementById('debug');
+      d.innerHTML += "\n[window.error] " + (e.message||'') + " @ " + (e.filename||'') + ":" + (e.lineno||'') + ":" + (e.colno||'');
+      d.classList.add('err');
+    });
+
+    // === CONFIG ===
+    const SHEET_ID      = '1b6Q_eI2DyTnIOcfyS1c3ydvHSiuvwr6e2P5Hd5M-GlA'; // TESTO
+    const GID           = '805927232';
+    const SHEET_FOTO_ID = '1ED2xiPv_JhCs33ylJNoAPOb6d2o88ddGJl-zp9am2II'; // FOTO
+    const GID_FOTO      = '1627790501';
+
+    const pill  = document.getElementById('countPill');
+    const wall  = document.getElementById('wall');
+    const empty = document.getElementById('empty');
+    const debug = document.getElementById('debug');
+
+    // — Utils
+    function esc(s){
+      return String(s ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // prende c.v, altrimenti c.f (formattato)
+    const val = c => {
+      if (!c) return '';
+      if (c.v != null) return c.v;
+      if (c.f != null) return c.f;
+      return '';
+    };
+
+    // Costruisce/recupera una volta sola il lightbox
+    function ensureLightbox(){
+    let lb = document.getElementById('lb');
+    if (lb) return lb;
+
+    lb = document.createElement('div');
+    lb.id = 'lb';
+    lb.innerHTML = `
+      <div class="frame">
+        <button class="close" aria-label="Chiudi" title="Chiudi">✕</button>
+        <button class="ctrl prev" aria-label="Precedente" title="Precedente">‹</button>
+        <img alt="">
+        <button class="ctrl next" aria-label="Successiva" title="Successiva">›</button>
+        <div class="counter">1/1</div>
+        <a class="open" target="_blank" rel="noopener" style="position:absolute;right:56px;top:12px;padding:6px 10px;border-radius:8px;background:#000a;color:#fff;text-decoration:none;font:500 14px/1.1 system-ui">Apri su Drive ▶</a>
+      </div>
+    `;
+    document.body.appendChild(lb);
+
+    // interazioni base
+    lb.addEventListener('click', (e)=>{
+        if (e.target.id === 'lb') closeLightbox(); // click su sfondo
+    });
+    lb.querySelector('.close').addEventListener('click', closeLightbox);
+    lb.querySelector('.prev').addEventListener('click', ()=> shiftLightbox(-1));
+    lb.querySelector('.next').addEventListener('click', ()=> shiftLightbox(+1));
+
+    // tastiera
+    window.addEventListener('keydown', (e)=>{
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') shiftLightbox(-1);
+        if (e.key === 'ArrowRight') shiftLightbox(+1);
+    });
+
+    // swipe touch
+    let touchX = null;
+    lb.addEventListener('touchstart', e=>{ touchX = e.touches[0].clientX; }, {passive:true});
+    lb.addEventListener('touchend', e=>{
+        if (touchX == null) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > 40) shiftLightbox(dx>0 ? -1 : +1);
+        touchX = null;
+    });
+
+    // stato
+    lb._photos = [];
+    lb._idx = 0;
+
+    return lb;
+    }
+
+    // Normalizza un URL thumbnail alla dimensione desiderata (per lightbox: grande)
+    function upscaleThumb(u, w=3000){
+    try {
+        const url = new URL(u);
+        if (url.hostname.includes('drive.google.com') && url.pathname.includes('/thumbnail')) {
+        url.searchParams.set('sz', `w${w}`);
+        return url.toString();
+        }
+    } catch {}
+    return u;
+    }
+
+    // Dato un URL thumbnail di Drive, ricava l'URL /file/ID/preview
+    function drivePreviewFromThumb(u){
+      try{
+        const url = new URL(u);
+        const id = url.searchParams.get('id');
+        if (id) return `https://drive.google.com/file/d/${id}/preview`;
+      }catch{}
+      return null;
+    }
+
+
+    function openLightbox(photos, startIdx=0){
+    const lb = ensureLightbox();
+    lb._photos = photos.map(u => upscaleThumb(u, 3000));
+    lb._idx = Math.max(0, Math.min(startIdx, lb._photos.length-1));
+    updateLightbox();
+    lb.classList.add('open');
+    }
+
+    function closeLightbox(){
+    const lb = ensureLightbox();
+    lb.classList.remove('open');
+    }
+
+    function shiftLightbox(delta){
+    const lb = ensureLightbox();
+    if (!lb._photos.length) return;
+    lb._idx = (lb._idx + delta + lb._photos.length) % lb._photos.length;
+    updateLightbox();
+    }
+
+    function updateLightbox(){
+      const lb = ensureLightbox();
+      const img = lb.querySelector('img');
+      const hrefEl = lb.querySelector('a.open');
+
+      const current = lb._photos[lb._idx];
+      img.src = current;
+
+      const preview = drivePreviewFromThumb(current);
+      hrefEl.href = preview || current;           // se è una thumb Drive → /preview; altrimenti usa l’URL stesso
+      hrefEl.title = "Apri in una nuova scheda";  // hint
+
+      lb.querySelector('.counter').textContent = `${lb._idx+1}/${lb._photos.length}`;
+    }
+
+    // Parser robusto per date italiane "dd/mm/yyyy hh:mm[:ss]"
+    function parseItalianDate(s){
+      if (s instanceof Date) return s;
+      if (typeof s !== 'string') return null;
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+      if (m){
+        const [, dd, mm, yyyy, hh='0', mi='0', ss='0'] = m;
+        const d = new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(hh), Number(mi), Number(ss));
+        return isNaN(d.getTime()) ? null : d;
+      }
+      const t = Date.parse(s);
+      return isNaN(t) ? null : new Date(t);
+    }
+
+    function fmtDate(d){
+      if (!d) return '';
+      const pad = n => String(n).padStart(2,'0');
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function mapColumnsTesto(headers){
+      const find = re => headers.findIndex(h => re.test(h));
+      const idx = {
+        ts:      find(/time|data|timestamp|ora|cronolog/i),
+        nome:    find(/qual.*nome/i),
+        cognome: find(/qual.*cognome/i),
+        conosci: find(/come.*conosci/i),
+        ricordo: find(/ricordo/i),
+        codice:  find(/codice.*rispost|codice/i)
+      };
+      ['ts','nome','cognome','conosci','ricordo','codice'].forEach((k,i)=>{ if(idx[k] < 0) idx[k] = i; });
+      return idx;
+    }
+
+    function mapColumnsFotoAll(headers){
+    // cattura TUTTE le colonne con potenziale URL
+    const linkCols = [];
+    headers.forEach((h, i) => {
+        if (/(file|foto|immagine|image|link|url)/i.test(h)) linkCols.push(i);
+    });
+    // individua anche una colonna "codice"
+    let codiceIdx = headers.findIndex(h => /codice.*rispost|^codice$/i.test(h));
+    if (codiceIdx < 0) codiceIdx = 0; // fallback
+
+    return { codiceIdx, linkCols };
+    }
+
+    function normalizeDrive(url){
+    if(!url) return null;
+    const raw = String(url).trim();
+
+    // Estrae l'ID file da una thumbnail Drive (…/thumbnail?id=XXX)
+    function driveIdFromThumb(u){
+    try{
+        const url = new URL(u);
+        if (url.hostname === 'drive.google.com' && url.pathname.includes('/thumbnail')){
+        return url.searchParams.get('id');
+        }
+    }catch{}
+    const m = String(u).match(/[?&]id=([A-Za-z0-9_-]{20,})/);
+    return m ? m[1] : null;
+    }
+
+    // URL "stream" per <video> (funziona per i file video su Drive)
+    function driveDownloadUrl(id){
+    return `https://drive.google.com/uc?export=download&id=${id}`;
+    }
+
+
+    // Scarta cartelle e Google Photos
+    if (/drive\.google\.com\/drive\/folders\//.test(raw)) return null;
+    if (/photos\.google\.com/.test(raw)) return null;
+
+    // Se è già uc?export=view o thumbnail, prova a estrarre id/resourcekey
+    try {
+        const u = new URL(raw);
+        let id = null;
+
+        // ID da /file/d/ID/ o query ?id=
+        const m = u.pathname.match(/\/d\/([A-Za-z0-9_-]{20,})/);
+        if (m) id = m[1];
+        if (!id) id = u.searchParams.get('id');
+
+        const rk = u.searchParams.get('resourcekey');
+
+        if (id) {
+        const rkParam = rk ? `&resourcekey=${encodeURIComponent(rk)}` : '';
+        // THUMBNAIL: risponde image/jpeg → niente ORB
+        return `https://drive.google.com/thumbnail?id=${id}${rkParam}&sz=w2000`;
+        }
+    } catch {/* cade sotto */}
+
+    // Regex di riserva
+    const rx = /(?:\/d\/|[\?\&]id=|uc\?id=|open\?id=)([A-Za-z0-9_-]{20,})/;
+    const m2 = raw.match(rx);
+    if (m2 && m2[1]) {
+        return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w2000`;
+    }
+
+    return null; // se non riconosco, meglio scartare
+    }
+
+    // — Stato
+    let testoRows  = null;
+    let fotoMap    = new Map(); // di default vuoto → render possibile anche senza FOTO
+    let fotoLoaded = false;
+
+    const safeKey = x => (x||'').trim().toUpperCase();
+
+    function tryRender(){
+      if (!testoRows) return; // servono almeno i testi
+
+      const rows = testoRows
+        .filter(x => (x.nome || x.cognome || x.ricordo))
+        .sort((a,b)=>{
+          const ta = a.ts ? a.ts.getTime() : 0;
+          const tb = b.ts ? b.ts.getTime() : 0;
+          return tb - ta;
+        });
+
+      pill.textContent = `${rows.length} messaggi`;
+      wall.innerHTML = '';
+      empty.style.display = rows.length ? 'none' : 'block';
+
+      const frag = document.createDocumentFragment();
+      rows.forEach(item=>{
+        const firma   = [item.nome, item.cognome].filter(Boolean).join(' ') || 'Anonimo';
+        const conosci = item.conosci ? ` <span style="opacity:.7">(${esc(item.conosci)})</span>` : '';
+
+        const imgs = (fotoMap.get(safeKey(item.codice)) || []).slice(0,12);
+        const gallery = imgs.length ? `
+            <div class="gallery">
+                ${imgs.map(u=>`
+                <figure class="ph">
+                    <img src="${esc(u)}" alt="" loading="lazy">
+                </figure>
+                `).join('')}
+            </div>
+            ` : '';
+        const when = item.ts ? `<div class="when" style="opacity:.6">${fmtDate(item.ts)}</div>` : '';
+
+        const card = document.createElement('div');
+        card.className = 'postcard';
+        card.innerHTML = `
+        ${gallery}
+        <div class="msg">${esc(item.ricordo || '—')}</div>
+        ${when}
+        <div class="sig">— ${esc(firma)}${conosci}</div>
+        `;
+
+        // salva le foto della cartolina nel dataset (JSON, così è indipendente dall'HTML)
+        if (imgs.length) {
+        card.dataset.photos = JSON.stringify(imgs);
+        }
+        frag.appendChild(card);
+      });
+      wall.appendChild(frag);
+      // Event delegation: click su qualsiasi immagine della gallery
+        wall.addEventListener('click', (e)=>{
+            const imgEl = e.target.closest('.gallery .ph img');
+            if (!imgEl) return;
+
+            const fig = imgEl.closest('.ph');
+            // evita doppie sostituzioni
+            if (fig && fig.querySelector('video')) return;
+
+            const id = driveIdFromThumb(imgEl.src);
+            if (id){
+                // Sostituisci la thumb con un player video nativo
+                const v = document.createElement('video');
+                v.controls = true;
+                v.preload = 'metadata';
+                v.playsInline = true;
+                v.poster = imgEl.src;                // usiamo la stessa thumbnail come poster
+                v.src = driveDownloadUrl(id);        // stream dal file Drive
+                v.style.maxWidth = '100%';
+                v.style.height = 'auto';
+                fig.innerHTML = '';
+                fig.appendChild(v);
+                // tenta l'autoplay silenzioso; se fallisce restano i controlli per avviarlo
+                v.muted = true;
+                v.play().catch(()=>{ /* normale su mobile: l’utente premerà play */ });
+                return; // niente lightbox: ora c'è il player nella card
+            }
+
+            // fallback: comportamento originale (foto → lightbox)
+            const cardEl = e.target.closest('.postcard');
+            if (!cardEl) return;
+            try {
+                const photos = JSON.parse(cardEl.dataset.photos || '[]');
+                if (!photos.length) return;
+                const figures = Array.from(cardEl.querySelectorAll('.gallery .ph img'));
+                const idx = Math.max(0, figures.indexOf(imgEl));
+                openLightbox(photos, idx);
+            } catch (err) {
+                console.warn('Lightbox error', err);
+            }
+        },
+        ); // opzionale: togli once se la bacheca è dinamica e si aggiorna spesso
+
+
+      if (!fotoLoaded){
+        debug.innerHTML += `\n[info] Foglio FOTO non disponibile o vuoto: mostro solo i messaggi di testo.`;
+      }
+    }
+
+    // — Callbacks JSONP
+    window.onGVizTesto = function(json){
+      try{
+        const table   = json.table;
+        const headers = table.cols.map(c => (c.label || '').trim());
+        debug.innerHTML = `TESTO headers: ${headers.join(' | ')}`;
+        const idx = mapColumnsTesto(headers);
+
+        testoRows = (table.rows || []).map(r => {
+          const rawTs = val(r.c[idx.ts]);      // può essere Date oppure stringa
+          const d     = parseItalianDate(rawTs);
+          return {
+            ts: d,                              // Date o null
+            nome:    val(r.c[idx.nome]),
+            cognome: val(r.c[idx.cognome]),
+            conosci: val(r.c[idx.conosci]),
+            ricordo: val(r.c[idx.ricordo]),
+            codice:  val(r.c[idx.codice])
+          };
+        });
+
+        tryRender();
+      }catch(e){
+        console.error(e);
+        pill.textContent = 'Errore';
+        empty.textContent = 'Impossibile leggere il foglio TESTO.';
+        empty.style.display = 'block';
+      }
+    };
+
+    window.onGVizFoto = function(json){
+    try{
+        if (!json.table || !json.table.cols) {
+        debug.innerHTML += `\n[onGVizFoto] Nessuna tabella ricevuta. Controlla gid o permessi del foglio FOTO.`;
+        fotoLoaded = false;
+        tryRender();
+        return;
+        }
+
+        const table   = json.table;
+        const headers = table.cols.map(c => (c.label || '').trim());
+        debug.innerHTML += `\nFOTO headers: ${headers.join(' | ')}`;
+
+        const map = mapColumnsFotoAll(headers);
+        if (map.linkCols.length === 0) {
+        debug.innerHTML += `\n[onGVizFoto] Nessuna colonna link trovata (cerco parole: file/foto/immagine/image/link/url).`;
+        } else {
+        debug.innerHTML += `\n[onGVizFoto] Colonne link usate: ${map.linkCols.map(i=>`#${i}:${headers[i]}`).join(', ')}`;
+        }
+
+        fotoMap = new Map();
+        let totalUrls = 0;
+
+        (table.rows || []).forEach((r, rowIdx)=>{
+        const codeRaw = val(r.c[map.codiceIdx]);
+        const codice = safeKey(codeRaw);
+        if (!codice) return;
+
+        const bucket = fotoMap.get(codice) || [];
+        map.linkCols.forEach(ci=>{
+            const raw = val(r.c[ci]);
+            if (!raw) return;
+
+            // può contenere più link separati da newline / virgola / punto e virgola / spazio
+            const parts = String(raw).split(/[\n,; ]+/).map(s=>s.trim()).filter(Boolean);
+
+            parts.forEach(p=>{
+            const u = normalizeDrive(p);
+            if (u) {
+                bucket.push(u);
+                totalUrls++;
+            } else {
+                debug.innerHTML += `\n[row ${rowIdx}] URL scartato: ${p}`;
+            }
+            });
+        });
+
+        if (bucket.length) fotoMap.set(codice, bucket);
+        });
+
+        fotoLoaded = true;
+        debug.innerHTML += `\n[onGVizFoto] Mappati ${fotoMap.size} codici con ${totalUrls} URL totali.`;
+        // Mostra un esempio per il primo codice
+        const first = fotoMap.keys().next();
+        if (!first.done) {
+        const k = first.value;
+        debug.innerHTML += `\nEsempio codice "${k}": ${ (fotoMap.get(k)||[]).slice(0,3).join(' | ') }`;
+        }
+
+        tryRender();
+    }catch(e){
+        console.error(e);
+        debug.innerHTML += `\n[error] Lettura FOTO fallita: ${e.message||e}`;
+        fotoLoaded = false;
+        tryRender();
+    }
+    };
+
+    // — Loader JSONP unico con timeout e onerror
+    function loadJSONP(handlerName, sheetId, gid){
+      const id = `gviz_${handlerName}`;
+      const old = document.getElementById(id);
+      if (old) old.remove();
+
+      // NOTA: responseHandler usa i due punti (:) e NON l'uguale (=)
+      const tqx = `out:json;responseHandler:${handlerName}`;
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq` +
+                  `?gid=${encodeURIComponent(gid)}&tqx=${encodeURIComponent(tqx)}&_=${Date.now()}`;
+
+      const s = document.createElement('script');
+      s.id = id;
+      s.src = url;
+
+      let timedOut = false;
+      const to = setTimeout(()=>{
+        timedOut = true;
+        debug.innerHTML += `\n[timeout] Nessuna risposta da JSONP (${handlerName}). URL:\n${url}\nControlla permessi del foglio o ad-blocker.`;
+        if (handlerName === 'onGVizFoto'){ fotoLoaded = false; tryRender(); }
+      }, 8000);
+
+      s.onload  = () => { if (!timedOut) clearTimeout(to); };
+      s.onerror = () => {
+        if (!timedOut) clearTimeout(to);
+        debug.innerHTML += `\n[onerror] Impossibile caricare JSONP (${handlerName}):\n${url}\nVerifica condivisione o ad-blocker.`;
+        if (handlerName === 'onGVizFoto'){ fotoLoaded = false; tryRender(); }
+      };
+
+      document.body.appendChild(s);
+    }
+
+    // carica entrambi i fogli
+    loadJSONP('onGVizTesto', SHEET_ID, GID);
+    loadJSONP('onGVizFoto',  SHEET_FOTO_ID, GID_FOTO);
+  </script>
+</body>
+</html>

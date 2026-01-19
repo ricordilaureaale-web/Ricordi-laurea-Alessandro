@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bacheca dei ricordi</title>
+  <link rel="stylesheet" href="bacheca.css"/>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Bacheca dei ricordi</h1>
+        <p class="sub">I messaggi inviati dal form, in tempo (quasi) reale.</p>
+      </div>
+      <div class="pill" id="countPill">—</div>
+    </header>
+
+    <div class="topbar">
+      <a class="btn secondary" href="index.html">⬅︎ Compila anche tu il form</a>
+    </div>
+
+    <div id="wall" class="grid"></div>
+    <p id="empty" class="empty">Ancora nessun messaggio.</p>
+
+    <div id="debug" style="display:none;"></div>
+      <script src="utility2.js"></script>
+  </div>
+</body>
+</html>

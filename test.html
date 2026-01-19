@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ricordi Tesi Fabio</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="card">
+      <h1>Hey Ciao 👋</h1>
+      <p class="sub">Che ne dici di creare un ricordo per il futuro.</p>
+
+      <!-- Barra di progresso -->
+      <div class="progress-wrap">
+        <div class="progress" id="progress" style="width: 0%"></div>
+      </div>
+      <a
+        class="btn primary"
+        style="display: flex; justify-self: center; margin-bottom: 10px"
+        href="bacheca.html"
+      >
+        Vai alla bacheca
+      </a>
+
+      <!-- IFRAME nascosto per il POST al Form principale -->
+      <iframe name="hidden_iframe" id="hidden_iframe" class="hidden"></iframe>
+
+      <!-- FORM principale (testo) verso Google Forms -->
+      <form
+        id="gform"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSeiyzJ0qeOlSHkIkJGVZFWgPHZ4s_5w3dlSfdevs2TXCCGHsA/formResponse"
+        method="POST"
+        target="hidden_iframe"
+        novalidate
+      >
+        <!-- STEP 1: Nome e Cognome -->
+        <section class="step active" data-step="1">
+          <div class="row">
+            <div>
+              <label for="nome">Qual è il tuo Nome? *</label>
+              <input
+                id="nome"
+                name="entry.1591633300"
+                type="text"
+                autocomplete="given-name"
+                required
+              />
+            </div>
+            <div>
+              <label for="cognome">Qual è il tuo Cognome? *</label>
+              <input
+                id="cognome"
+                name="entry.326955045"
+                type="text"
+                autocomplete="family-name"
+                required
+              />
+            </div>
+          </div>
+          <div class="error" id="err-step1">Inserisci Nome e Cognome.</div>
+          <div class="actions">
+            <button type="button" class="btn secondary" disabled>
+              Indietro
+            </button>
+            <button type="button" class="btn primary" id="next1">Avanti</button>
+          </div>
+        </section>
+
+        <!-- STEP 2: Come mi conosci -->
+        <section class="step" data-step="2">
+          <label>Come mi conosci?</label>
+          <label class="radio"
+            ><input type="radio" name="entry.896447326" value="Familiare" />
+            Familiare</label
+          >
+          <label class="radio"
+            ><input type="radio" name="entry.896447326" value="Amico" />
+            Amico</label
+          >
+          <label class="radio"
+            ><input
+              type="radio"
+              name="entry.896447326"
+              value="Non lo so nemmeno io"
+            />
+            Non lo so nemmeno io</label
+          >
+          <label class="radio"
+            ><input
+              type="radio"
+              name="entry.896447326"
+              value="__other_option__"
+              id="optAltro"
+            />
+            Altro</label
+          >
+          <input
+            type="text"
+            id="altroTxt"
+            name="entry.896447326.other_option_response"
+            class="hidden"
+            placeholder="Specifica…"
+          />
+          <input type="hidden" name="entry.896447326_sentinel" />
+          <div class="error" id="err-step2">
+            Scegli un’opzione (specifica “Altro” se selezionato).
+          </div>
+          <div class="actions">
+            <button type="button" class="btn secondary" id="back2">
+              Indietro
+            </button>
+            <button type="button" class="btn primary" id="next2">Avanti</button>
+          </div>
+        </section>
+
+        <!-- STEP 3: SOLO Messaggio -->
+        <section class="step" data-step="3">
+          <label for="ricordo">Mi lasci un ricordo di stasera?</label>
+          <textarea
+            id="ricordo"
+            name="entry.1696159737"
+            placeholder="Scrivi qualcosa…"
+          ></textarea>
+
+          <!-- campi tecnici minimi -->
+          <input type="hidden" name="fvv" value="1" />
+          <input type="hidden" name="pageHistory" value="0" />
+
+          <div class="error" id="err-step3"></div>
+          <div class="actions">
+            <button type="button" class="btn secondary" id="back3">
+              Indietro
+            </button>
+            <button type="button" class="btn primary" id="next3">Avanti</button>
+          </div>
+        </section>
+
+        <!-- STEP 4: Foto -->
+        <section class="step" data-step="4">
+        <h3 style="margin: 0 0 6px">Vuoi aggiungere delle foto?</h3>
+        <p class="sub">Si aprirà una piccola finestra per caricare le foto.</p>
+
+        <input type="hidden" id="codiceRisposta" name="entry.1608357523" />
+
+        <div class="actions" style="justify-content:flex-start; gap:12px">
+            <a id="btnUpload" class="btn secondary hidden" href="#" rel="noopener">Apri in nuova scheda (fallback)</a>
+            <button type="button" class="btn secondary" id="next4">Ho finito</button>
+        </div>
+
+        <div id="fotoNotice" class="sub" style="margin-top:8px"></div>
+
+        <div class="actions">
+            <button type="button" class="btn secondary" id="back4">Indietro</button>
+        </div>
+        </section>
+
+        <!-- STEP 5: Riepilogo -->
+        <section class="step" data-step="5">
+          <h3 style="margin: 0 0 6px">Riepilogo</h3>
+          <div class="summary" id="summaryBox">
+            <div class="greeting" id="greeting"></div>
+            <div id="summary"></div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" id="back5">
+              Indietro
+            </button>
+            <button type="submit" class="btn primary" id="btnSubmit">
+              Invia
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 6: Grazie -->
+        <section class="step" data-step="6">
+          <h2 style="margin: 0 0 6px">Grazie mille! 🎉</h2>
+          <p class="sub">
+            La tua risposta è stata registrata. Sei una persona speciale 💙
+          </p>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" id="backToStart">
+              Compila di nuovo
+            </button>
+            <a class="btn primary" href="bacheca.html">Vai alla bacheca</a>
+          </div>
+        </section>
+      </form>
+    </div>
+    <script src="utility.js"></script>
+  </body>
+</html>
