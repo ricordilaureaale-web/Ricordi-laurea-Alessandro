@@ -48,17 +48,21 @@
 
       <section class="step" data-step="3">
         <h3 style="margin:0 0 6px">Vuoi aggiungere delle foto?</h3>
-        <p class="sub">Premi il pulsante qui sotto: si aprirà una finestra per caricare foto/video.</p>
+          <p class="sub">Carica i tuoi scatti nella finestra che si aprirà.</p>
 
-        <input type="hidden" id="codiceRisposta" name="entry.697726659">
+            <input type="hidden" id="codiceRisposta" name="entry.697726659">
 
-        <div id="fotoNotice" class="sub" style="margin:8px 0 12px"></div>
-
+        <div id="statusContainer" style="margin: 20px 0; text-align: center;">
+          <div id="loadingSpinner" class="hidden" style="margin-bottom: 10px;">
+            <div class="spinner"></div> <p class="sub">In attesa del caricamento...</p>
+          </div>
+          <div id="fotoNotice" class="sub" style="font-weight: bold; color: #2ecc71;"></div>
+        </div>
+      
         <div class="actions">
           <button type="button" class="btn secondary" id="back3">Indietro</button>
-          <button type="button" class="btn primary" id="openUpload">Carica foto / video</button>
-          <a id="btnUpload" class="btn secondary hidden" href="#" target="_blank">Apri caricamento</a>
-          <button type="button" class="btn next" id="next3">Ho finito</button>
+          <button type="button" class="btn primary" id="openUpload">Apri Caricamento</button>
+          <button type="button" class="btn next hidden" id="next3">Ho finito / Avanti</button>
         </div>
       </section>
 
@@ -308,3 +312,4 @@ function buildFotoUrl(codice) {
     p.set(ENTRY_CODE_FOTO, codice);
     return `${FORM_FOTO_BASE}?usp=pp_url&${p.toString()}`;
 }
+
