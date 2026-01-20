@@ -38,7 +38,7 @@
     const find = re => headers.findIndex(h => re.test(h));
     return {
       ts: find(/time|data|timestamp/i),
-      nome: find(/ *nome/i),
+      nome: find(/^Nome$/i),
       ricordo: find(/ricordo|messaggio/i),
       codice: find(/codice.*rispost|codice/i)
     };
@@ -189,4 +189,5 @@
   loadJSONP('onGVizFoto', CFG.FOTO_SHEET_ID, CFG.FOTO_GID);
 
 })();
+
 
