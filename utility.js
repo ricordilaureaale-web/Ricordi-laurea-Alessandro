@@ -21,7 +21,7 @@
   let pollId = null;
   let popupWin = null;
   let popupWatchId = null;
-  let elapsed = 0; // Fix: dichiarata qui
+  let elapsed = 0;
 
   // ====== DOM ======
   const steps = Array.from(document.querySelectorAll('.step'));
@@ -35,6 +35,11 @@
   const codiceInput = qs('#codiceRisposta');
   const fotoNotice = qs('#fotoNotice');
   const confirmMsg = qs('#confirmMsg');
+  
+  // Nuovi elementi UI per Opzione A
+  const loadingSpinner = qs('#loadingSpinner');
+  const openUploadBtn = qs('#openUpload');
+  const nextStepBtn = qs('#next3');
 
   // ====== NAV ======
   function showStep(idx){
@@ -49,23 +54,21 @@
     }
   }
 
-  // ====== FLOW (Sincronizzato con HTML) ======
+  // ====== FLOW ======
   
-  // Da Nome a Ricordo
   qs('#next1')?.addEventListener('click', ()=>{ 
     if (!nome.value.trim()) { err1?.classList.add('show'); return; }
     err1?.classList.remove('show');
     current=1; showStep(current); 
   });
 
-  // Da Ricordo a Foto
   qs('#next2')?.addEventListener('click', ()=>{ 
     current=2; showStep(current); 
   });
   qs('#back2')?.addEventListener('click', ()=>{ current=0; showStep(current); });
 
-  // Da Foto (apertura popup) a Riepilogo
-  qs('#openUpload')?.addEventListener('click', () => {
+  // Gestione Apertura Upload (Opzione A)
+  openUploadBtn?.addEventListener('click', () => {
     if (!codiceInput.value) codiceInput.value = makeCode();
     const url = buildFotoUrl(codiceInput.value);
 
@@ -78,22 +81,36 @@
           btnUpload.classList.remove('hidden');
       }
     }
-    if (fotoNotice) fotoNotice.textContent = 'Finestra aperta. Ti avviso qui quando ricevo le foto...';
+
+    // UI Feedback: Nascondi tasto apertura, mostra caricamento
+    openUploadBtn.classList.add('hidden');
+    loadingSpinner?.classList.remove('hidden');
+    if (fotoNotice) fotoNotice.textContent = 'In attesa del caricamento...';
+    
     startPolling();
     startPopupWatcher();
   });
 
-  qs('#next3')?.addEventListener('click', ()=>{ 
+  nextStepBtn?.addEventListener('click', ()=>{ 
     updateSummary(); 
     current=3; showStep(current); 
   });
-  qs('#back3')?.addEventListener('click', ()=>{ current=1; showStep(current); });
+  
+  qs('#back3')?.addEventListener('click', ()=>{ 
+    // Se torna indietro, ripristiniamo la visibilità dei tasti per sicurezza
+    openUploadBtn.classList.remove('hidden');
+    loadingSpinner?.classList.add('hidden');
+    current=1; showStep(current); 
+  });
 
   qs('#back4')?.addEventListener('click', ()=>{ current=2; showStep(current); });
 
   qs('#backToStart')?.addEventListener('click', ()=>{ 
     form.reset();
     codiceInput.value = '';
+    openUploadBtn.classList.remove('hidden');
+    loadingSpinner?.classList.add('hidden');
+    nextStepBtn.classList.add('hidden');
     current=0; showStep(current); 
   });
 
@@ -105,7 +122,6 @@
     const btn = qs('#btnSubmit');
     if (btn){ btn.disabled = true; btn.textContent = 'Invio…'; }
     
-    // L'iframe gestisce la risposta
     iFrame?.addEventListener('load', ()=>{
         current=4; showStep(current);
         submitted=false;
@@ -121,16 +137,30 @@
     try {
       const res = await gvizCheckPhotosByCode(code);
       if (res.count > 0) {
-        if (fotoNotice) fotoNotice.textContent = '✅ Foto caricate! Puoi procedere.';
+        // 1. Chiudi popup se ancora aperta
         try { if (popupWin && !popupWin.closed) popupWin.close(); } catch(_) {}
-        stopPopupWatcher();
-        // Avanza automaticamente al riepilogo se l'utente è ancora nello step foto
-        if (current === 2) { 
-           updateSummary(); 
-           current = 3; 
-           showStep(current); 
+        
+        // 2. UI Feedback Successo
+        loadingSpinner?.classList.add('hidden');
+        if (fotoNotice) {
+            fotoNotice.style.color = "#2ecc71";
+            fotoNotice.textContent = '✅ Foto ricevute correttamente!';
         }
+        
+        // 3. Mostra tasto per procedere
+        nextStepBtn?.classList.remove('hidden');
+
+        stopPopupWatcher();
         stopPolling();
+
+        // 4. Auto-avanzamento dopo 1.5 secondi per dare tempo di vedere la spunta
+        setTimeout(() => {
+            if (current === 2) { 
+               updateSummary(); 
+               current = 3; 
+               showStep(current); 
+            }
+        }, 1500);
       }
     } catch (e) { console.error("Errore check:", e); }
   }
@@ -142,7 +172,13 @@
     pollId = setInterval(async ()=>{
       elapsed += STEP_MS;
       await checkPhotosOnce();
-      if (current >= 3 || elapsed >= MAX_MS) stopPolling();
+      // Se l'utente chiude la finestra manualmente o scade il tempo, mostriamo comunque il tasto avanti
+      if (elapsed >= MAX_MS) {
+          loadingSpinner?.classList.add('hidden');
+          nextStepBtn?.classList.remove('hidden');
+          stopPolling();
+      }
+      if (current >= 3) stopPolling();
     }, STEP_MS);
   }
 
@@ -153,23 +189,26 @@
     popupWatchId = setInterval(async ()=>{
       if (popupWin && popupWin.closed){
         stopPopupWatcher();
-        if (fotoNotice) fotoNotice.textContent = 'Sto verificando l’upload…';
-        // Tenta un check finale dopo la chiusura
-        setTimeout(checkPhotosOnce, 2000);
+        // Se chiude la popup senza che il polling abbia trovato nulla, 
+        // mostriamo comunque il tasto "Ho finito" per non bloccarlo
+        setTimeout(() => {
+            if (current === 2 && loadingSpinner && !loadingSpinner.classList.contains('hidden')) {
+                loadingSpinner.classList.add('hidden');
+                nextStepBtn.classList.remove('hidden');
+                if (fotoNotice) fotoNotice.textContent = 'Puoi procedere con l\'invio.';
+            }
+        }, 3000);
       }
     }, 500);
   }
 
-  // --- Funzioni GViz (Non modificate, vanno bene) ---
+  // --- Funzioni GViz ---
   function normalizeDrive(url){
     if(!url) return null;
     const raw = String(url).trim();
-    if (/drive\.google\.com\/drive\/folders\//.test(raw)) return null;
-    try {
-      const rx = /(?:\/d\/|[\?\&]id=|uc\?id=|open\?id=)([A-Za-z0-9_-]{20,})/;
-      const m = raw.match(rx);
-      if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
-    } catch {}
+    const rx = /(?:\/d\/|[\?\&]id=|uc\?id=|open\?id=)([A-Za-z0-9_-]{20,})/;
+    const m = raw.match(rx);
+    if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
     return null;
   }
 
@@ -180,7 +219,6 @@
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cbName}`;
       const s = document.createElement('script');
       s.src = url;
-      s.onerror = () => reject();
       document.body.appendChild(s);
       setTimeout(() => s.remove(), 1000);
     });
@@ -193,7 +231,6 @@
       const table = json.table;
       const codeIdx = table.cols.findIndex(c => /codice/i.test(c.label));
       if (codeIdx < 0) return { count: 0 };
-      
       const rows = table.rows.filter(r => {
         const val = r.c[codeIdx]?.v || '';
         return String(val).trim().toUpperCase() === code.toUpperCase();
