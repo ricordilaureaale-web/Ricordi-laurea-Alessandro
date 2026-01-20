@@ -6,7 +6,6 @@
   <title>Ricordi Laurea Alessandro</title>
   <link rel="stylesheet" href="style.css"/>
   <style>
-    /* Aggiunto per gestire la visibilità dello spinner e dei tasti */
     .hidden { display: none !important; }
     .spinner {
       width: 30px;
@@ -19,6 +18,8 @@
       margin-bottom: 10px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* Feedback visivo per successo */
+    #fotoNotice.success { color: #2ecc71; }
   </style>
 </head>
 <body>
@@ -27,7 +28,6 @@
     <p class="sub">Se mi dedichi 2 minuti possiamo creare un bel ricordo per tutti di questa serata</p>
 
     <div class="progress-wrap"><div class="progress" id="progress" style="width:0%"></div></div>
-    
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
     <form id="gform" action="https://docs.google.com/forms/d/1JQi4mdeecui8nj6S-6AUXiQNHUa4u7MHgdYqvoF4xag/formResponse" method="POST" target="hidden_iframe" novalidate>
@@ -184,6 +184,11 @@
         // --- Invio e Reset ---
         document.getElementById('backToStart').addEventListener('click', () => {
             form.reset();
+            codiceInput.value = '';
+            openUploadBtn.classList.remove('hidden');
+            skipPhotosBtn.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+            fotoNotice.textContent = "";
             current = 0;
             showStep(current);
         });
@@ -194,7 +199,6 @@
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
             btn.textContent = "Invio...";
-            // L'invio avviene tramite l'iframe target
         });
 
         iFrame.addEventListener('load', () => {
@@ -207,16 +211,16 @@
         // --- Logica Automazione Foto ---
         async function checkPhotosOnce() {
             const code = codiceInput.value;
+            if (!code) return;
             try {
                 const res = await gvizCheckPhotosByCode(code);
                 if (res.count > 0) {
                     if (popupWin && !popupWin.closed) popupWin.close();
                     loadingSpinner.classList.add('hidden');
-                    fotoNotice.style.color = "#2ecc71";
+                    fotoNotice.classList.add('success');
                     fotoNotice.textContent = "✅ Foto ricevute!";
                     next3.classList.remove('hidden');
                     clearInterval(pollId);
-                    // Passa allo step conferma automaticamente dopo 1.5s
                     setTimeout(() => { 
                       if(current === 2) { 
                         updateSummary(); 
@@ -225,7 +229,7 @@
                       } 
                     }, 1500);
                 }
-            } catch (e) {}
+            } catch (e) { console.error("Errore polling:", e); }
         }
 
         function startPolling() {
@@ -243,11 +247,10 @@
         }
 
         async function gvizCheckPhotosByCode(code) {
-            const cbName = `__cb_${Date.now()}`;
+            const cbName = `__cb_${Date.now()}_${Math.floor(Math.random()*1000)}`;
             return new Promise((resolve, reject) => {
                 window[cbName] = (json) => {
                     const rows = json.table.rows.filter(r => {
-                        // Cerca il codice nelle celle della riga
                         return r.c.some(cell => {
                             const val = cell ? (cell.v || cell.f || '') : '';
                             return String(val).trim().toUpperCase() === code.toUpperCase();
@@ -259,9 +262,9 @@
                 const url = `https://docs.google.com/spreadsheets/d/${CFG.SHEET_FOTO_ID}/gviz/tq?gid=${CFG.GID_FOTO}&tqx=out:json;responseHandler:${cbName}`;
                 const s = document.createElement('script');
                 s.src = url;
-                s.onerror = () => reject();
+                s.onerror = () => { delete window[cbName]; reject(); };
                 document.body.appendChild(s);
-                setTimeout(() => s.remove(), 2000);
+                setTimeout(() => s.remove(), 2500);
             });
         }
     })();
