@@ -1,7 +1,7 @@
 (function () {
   // ====== CONFIG ======
-  const SHEET_FOTO_ID = '1ED2xiPv_JhCs33ylJNoAPOb6d2o88ddGJl-zp9am2II'; 
-  const GID_FOTO      = '1627790501'; 
+  const SHEET_FOTO_ID = '1h_GjGsAIm51xnDmn9o0nOyGexCDhXt0BjOy0XgfQz0o'; 
+  const GID_FOTO      = '389351937'; 
   const FORM_FOTO_BASE = "https://docs.google.com/forms/d/1ogcXWlD7glhcYIX1KIxoPAGZkByk2bG_c9s-KnfnM4E/viewform";
   const ENTRY_CODE_FOTO = "entry.496785438";
 
@@ -207,3 +207,4 @@
     });
   }
 })();
+
