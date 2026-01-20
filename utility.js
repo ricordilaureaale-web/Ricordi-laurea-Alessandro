@@ -36,10 +36,11 @@
   const fotoNotice = qs('#fotoNotice');
   const confirmMsg = qs('#confirmMsg');
   
-  // Nuovi elementi UI per Opzione A
+  // Elementi UI Foto
   const loadingSpinner = qs('#loadingSpinner');
   const openUploadBtn = qs('#openUpload');
   const nextStepBtn = qs('#next3');
+  const skipPhotosBtn = qs('#skipPhotos'); // Assicurati che questo ID esista nell'HTML
 
   // ====== NAV ======
   function showStep(idx){
@@ -50,24 +51,28 @@
 
   function updateSummary(){
     if (confirmMsg) {
-       confirmMsg.textContent = `Ok ${nome.value.trim()}, premi "Invia" per salvare il tuo ricordo.`;
+       const nomeVal = nome.value.trim();
+       confirmMsg.textContent = nomeVal 
+         ? `Ok ${nomeVal}, premi "Invia" per salvare il tuo ricordo.`
+         : `Premi "Invia" per salvare il tuo ricordo.`;
     }
   }
 
   // ====== FLOW ======
   
+  // Step 1 -> 2 (Nome non più obbligatorio)
   qs('#next1')?.addEventListener('click', ()=>{ 
-    if (!nome.value.trim()) { err1?.classList.add('show'); return; }
     err1?.classList.remove('show');
     current=1; showStep(current); 
   });
 
+  // Step 2 -> 3
   qs('#next2')?.addEventListener('click', ()=>{ 
     current=2; showStep(current); 
   });
   qs('#back2')?.addEventListener('click', ()=>{ current=0; showStep(current); });
 
-  // Gestione Apertura Upload (Opzione A)
+  // GESTIONE FOTO (Sì, carica)
   openUploadBtn?.addEventListener('click', () => {
     if (!codiceInput.value) codiceInput.value = makeCode();
     const url = buildFotoUrl(codiceInput.value);
@@ -82,13 +87,23 @@
       }
     }
 
-    // UI Feedback: Nascondi tasto apertura, mostra caricamento
+    // UI Feedback: Nascondi tasti scelta, mostra caricamento
     openUploadBtn.classList.add('hidden');
+    skipPhotosBtn?.classList.add('hidden');
     loadingSpinner?.classList.remove('hidden');
     if (fotoNotice) fotoNotice.textContent = 'In attesa del caricamento...';
     
     startPolling();
     startPopupWatcher();
+  });
+
+  // GESTIONE FOTO (No, salta)
+  skipPhotosBtn?.addEventListener('click', () => {
+    // Generiamo un codice "vuoto" per coerenza ma andiamo avanti
+    if (!codiceInput.value) codiceInput.value = "SKIP-" + Date.now().toString(36).toUpperCase();
+    updateSummary();
+    current = 3; 
+    showStep(current);
   });
 
   nextStepBtn?.addEventListener('click', ()=>{ 
@@ -97,8 +112,9 @@
   });
   
   qs('#back3')?.addEventListener('click', ()=>{ 
-    // Se torna indietro, ripristiniamo la visibilità dei tasti per sicurezza
-    openUploadBtn.classList.remove('hidden');
+    // Ripristiniamo la visibilità se l'utente torna indietro
+    openUploadBtn?.classList.remove('hidden');
+    skipPhotosBtn?.classList.remove('hidden');
     loadingSpinner?.classList.add('hidden');
     current=1; showStep(current); 
   });
@@ -108,9 +124,10 @@
   qs('#backToStart')?.addEventListener('click', ()=>{ 
     form.reset();
     codiceInput.value = '';
-    openUploadBtn.classList.remove('hidden');
+    openUploadBtn?.classList.remove('hidden');
+    skipPhotosBtn?.classList.remove('hidden');
     loadingSpinner?.classList.add('hidden');
-    nextStepBtn.classList.add('hidden');
+    nextStepBtn?.classList.add('hidden');
     current=0; showStep(current); 
   });
 
@@ -137,23 +154,19 @@
     try {
       const res = await gvizCheckPhotosByCode(code);
       if (res.count > 0) {
-        // 1. Chiudi popup se ancora aperta
         try { if (popupWin && !popupWin.closed) popupWin.close(); } catch(_) {}
         
-        // 2. UI Feedback Successo
         loadingSpinner?.classList.add('hidden');
         if (fotoNotice) {
             fotoNotice.style.color = "#2ecc71";
             fotoNotice.textContent = '✅ Foto ricevute correttamente!';
         }
         
-        // 3. Mostra tasto per procedere
         nextStepBtn?.classList.remove('hidden');
-
         stopPopupWatcher();
         stopPolling();
 
-        // 4. Auto-avanzamento dopo 1.5 secondi per dare tempo di vedere la spunta
+        // Auto-avanzamento
         setTimeout(() => {
             if (current === 2) { 
                updateSummary(); 
@@ -172,7 +185,6 @@
     pollId = setInterval(async ()=>{
       elapsed += STEP_MS;
       await checkPhotosOnce();
-      // Se l'utente chiude la finestra manualmente o scade il tempo, mostriamo comunque il tasto avanti
       if (elapsed >= MAX_MS) {
           loadingSpinner?.classList.add('hidden');
           nextStepBtn?.classList.remove('hidden');
@@ -189,13 +201,11 @@
     popupWatchId = setInterval(async ()=>{
       if (popupWin && popupWin.closed){
         stopPopupWatcher();
-        // Se chiude la popup senza che il polling abbia trovato nulla, 
-        // mostriamo comunque il tasto "Ho finito" per non bloccarlo
         setTimeout(() => {
             if (current === 2 && loadingSpinner && !loadingSpinner.classList.contains('hidden')) {
                 loadingSpinner.classList.add('hidden');
-                nextStepBtn.classList.remove('hidden');
-                if (fotoNotice) fotoNotice.textContent = 'Puoi procedere con l\'invio.';
+                nextStepBtn?.classList.remove('hidden');
+                if (fotoNotice) fotoNotice.textContent = 'Caricamento terminato.';
             }
         }, 3000);
       }
