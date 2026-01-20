@@ -14,29 +14,22 @@
   --radius: 14px;
 }
 
-/* Sfondo “muro” con trama leggera (niente immagini esterne) */
 html, body{
   height: 100%;
+  overflow-x: hidden; /* Evita lo scroll orizzontale su mobile */
 }
+
 body{
   margin: 0;
   color: var(--ink);
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
   background:
-    /* puntinatura delicata */
     radial-gradient(circle at 25% 15%, #00000005 0 1px, transparent 1px),
     radial-gradient(circle at 75% 85%, #00000005 0 1px, transparent 1px),
-    /* leggere righe verticali */
     linear-gradient(90deg, #0000 0, #0000 47.5%, #00000006 50%, #0000 52.5%, #0000 100%),
-    /* tinta base */
     var(--wall-bg);
-  background-size:
-    18px 18px,
-    18px 18px,
-    28px 28px,
-    auto;
+  background-size: 18px 18px, 18px 18px, 28px 28px, auto;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .wrap{
@@ -51,16 +44,18 @@ body{
 
 header{
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 10px;
 }
+
 h1{
   font-size: clamp(24px, 3.2vw, 38px);
   margin: 0 0 6px;
   letter-spacing: .3px;
 }
+
 .sub{
   margin: 0;
   color: var(--muted);
@@ -70,7 +65,6 @@ h1{
   background: #ffffffb8;
   backdrop-filter: blur(6px);
   border: 1px solid #00000010;
-  color: #2b2b2b;
   padding: 8px 12px;
   border-radius: 999px;
   box-shadow: 0 2px 8px rgba(0,0,0,.06);
@@ -83,18 +77,19 @@ h1{
   justify-content: flex-start;
   margin: 8px 0 18px;
 }
+
 .btn{
   display: inline-block;
   text-decoration: none;
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid #00000012;
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  transition: transform .06s ease, box-shadow .2s ease;
   background: #fff;
   color: #1f1f1f;
+  transition: transform .06s ease, box-shadow .2s ease;
 }
-.btn.secondary:hover{
+
+.btn:hover{
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0,0,0,.10);
 }
@@ -105,32 +100,30 @@ h1{
 
 .grid{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: clamp(14px, 2vw, 22px);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
   align-items: start;
 }
 
-.empty{
-  margin: 30px 4px 0;
-  color: var(--muted);
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr; /* Una sola colonna su telefoni piccoli */
+  }
 }
 
 /* ===============================
-   Card come POLAROID
-   - foto in alto, messaggio come didascalia
-   - nastri ai lati
+   Card POLAROID
 ==================================*/
 
 .postcard{
   position: relative;
-  overflow: visible;
   background: var(--paper);
   border-radius: calc(var(--radius) + 4px);
   box-shadow: var(--shadow);
   border: 1px solid var(--paper-edge);
   padding: 14px 14px 16px;
-  transform: rotate(calc(var(--twist, 0deg)));
-  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  transform: rotate(var(--twist, 0deg));
+  transition: transform .18s ease, box-shadow .18s ease;
 }
 
 .postcard:nth-child(4n){ --twist: -0.6deg; }
@@ -140,80 +133,49 @@ h1{
 
 .postcard:hover{
   transform: translateY(-3px) rotate(0deg);
-  box-shadow: 0 14px 30px rgba(0,0,0,.16), 0 4px 10px rgba(0,0,0,.08);
+  box-shadow: 0 14px 30px rgba(0,0,0,.16);
+  z-index: 10;
 }
 
-/* NASTRO ADESIVO (lati) */
+/* NASTRI ADESIVI */
 .postcard::before,
 .postcard::after{
   content: "";
   position: absolute;
-  width: 80px;             /* larghezza */
-  height: 26px;            /* altezza */
-  background: var(--tape); /* colore washi / scotch */
-  box-shadow: 0 4px 8px rgba(0,0,0,.2);
+  width: 80px;
+  height: 26px;
+  background: var(--tape);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   opacity: .9;
   pointer-events: none;
-  border-radius: 4px;      /* leggermente stondato */
-}
-.postcard::before{
-  left: -8px;
-  transform: rotate(-2.5deg);
-}
-.postcard::after{
-  right: -8px;
-  transform: rotate(2.5deg);
+  border-radius: 2px;
+  z-index: 2;
 }
 
-/* ——— PATTERN 1: due nastri (Top-Right + Bottom-Left) ——— */
-.grid .postcard:nth-child(3n+1)::before{
-  top: -8px;
-  left: -25px;
-  transform: rotate(-25deg);
-}
-.grid .postcard:nth-child(3n+1)::after{
-  bottom: -8px;
-  right: -30px;
-  transform: rotate(-25deg);
-}
+/* Pattern 1: Angoli opposti */
+.grid .postcard:nth-child(3n+1)::before{ top: -10px; left: -15px; transform: rotate(-25deg); }
+.grid .postcard:nth-child(3n+1)::after{ bottom: -10px; right: -15px; transform: rotate(-25deg); }
 
-/* ——— PATTERN 2: un solo nastro centrato in alto ——— */
-.grid .postcard:nth-child(3n+2)::before{
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-3deg);
-  width: 120px;             /* un filo più largo per il top */
-}
-.grid .postcard:nth-child(3n+2)::after{
-  display: none;
-}
+/* Pattern 2: Centrale alto */
+.grid .postcard:nth-child(3n+2)::before{ top: -15px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: 100px; }
+.grid .postcard:nth-child(3n+2)::after{ display: none; }
 
-/* ——— PATTERN 3: due nastri (Top-Left + Bottom-Right) ——— */
-.grid .postcard:nth-child(3n+3)::before{
-  top: 0em;
-  left: 14em;
-  transform: rotate(38deg);
-}
-.grid .postcard:nth-child(3n+3)::after{
-  bottom: -6px;
-  left: -25px;
-  transform: rotate(30deg);
-}
+/* Pattern 3: Angoli opposti invertiti */
+.grid .postcard:nth-child(3n+3)::before{ top: -10px; right: -15px; transform: rotate(25deg); }
+.grid .postcard:nth-child(3n+3)::after{ bottom: -10px; left: -15px; transform: rotate(25deg); }
 
-/* Cornice “polaroid”: più bordo sotto per la didascalia */
-.postcard .gallery{
-  padding: 10px 10px 6px;
-  box-shadow: inset 0 0 0 1px #ffffffcc;
-}
-
-/* Le foto dentro la polaroid: griglia armoniosa */
+/* Galleria Foto */
 .postcard .gallery{
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+  background: #00000005;
+  padding: 4px;
+  border-radius: 8px;
 }
-.postcard .gallery:has(.ph:nth-child(1):nth-last-child(1)){
-  /* Se c'è UNA sola immagine, falla “hero” */
+
+.postcard .gallery:has(.ph:only-child),
+.postcard .gallery:only-child {
   grid-template-columns: 1fr;
 }
 
@@ -221,190 +183,110 @@ h1{
   margin: 0;
   aspect-ratio: 4 / 3;
   background: #f3f3ef;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
-  display: block;
   border: 1px solid #e8e5de;
 }
-.ph img{
+
+.ph img, .ph video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform .25s ease;
-}
-.ph img:hover{
-  transform: scale(1.03);
-  cursor: zoom-in;
 }
 
-/* Didascalia (il tuo messaggio) – stile “scrittura a mano” */
+/* Testo Messaggio */
 .msg{
-  margin: 10px 6px 0;
-  padding: 8px 6px 4px;
-  color: #2c2c2c;
-  font: 500 16px/1.35 "Segoe Print", "Bradley Hand", "Comic Sans MS", "Chalkboard SE", "Patrick Hand", cursive;
+  margin: 12px 0 6px;
+  padding: 0 4px;
+  font: 500 17px/1.4 "Segoe Print", "Comic Sans MS", cursive;
   text-align: center;
-  min-height: 1lh;
-  /* effetto penna leggero */
-  text-shadow: 0 0 1px #00000010;
+  color: #333;
 }
 
-/* Data e firma sotto la polaroid */
 .when{
-  margin: 6px 6px 0;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
   text-align: center;
+  margin-bottom: 4px;
 }
+
 .sig{
-  margin: 6px 2px 0;
   font-size: 14px;
   text-align: right;
-  color: #3c3c3c;
-  opacity: .9;
+  font-weight: 600;
+  color: #444;
 }
 
 /* ===============================
-   DEBUG (già previsto nell’HTML)
-==================================*/
-#debug{
-  white-space: pre-wrap;
-  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: #314a1f;
-  background: #ecf6e9;
-  border: 1px dashed #9bc490;
-  padding: 10px;
-  border-radius: 10px;
-  margin-top: 28px;
-}
-#debug.err{
-  color: #6b1111;
-  background: #fdecec;
-  border-color: #f2b3b3;
-}
-
-/* ===============================
-   LIGHTBOX (id="lb")
+   LIGHTBOX
 ==================================*/
 #lb{
   position: fixed;
   inset: 0;
-  background: rgba(15,15,20,.82);
+  background: rgba(0,0,0,.9);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 10000;
+  touch-action: none;
 }
 #lb.open{ display: flex; }
+
 #lb .frame{
   position: relative;
-  max-width: min(92vw, 1400px);
-  max-height: 90vh;
   width: 100%;
-  padding: 0;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto 1fr auto;
-  gap: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
+
 #lb img{
-  grid-column: 1 / -1;
-  grid-row: 2;
+  max-width: 95vw;
   max-height: 80vh;
-  width: auto;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0 18px 40px rgba(0,0,0,.45);
-  margin-inline: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
-#lb .close{
-  grid-column: 3;
-  grid-row: 1;
-  justify-self: end;
-}
-#lb .ctrl, #lb .close{
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #ffffffdd;
-  box-shadow: 0 6px 16px rgba(0,0,0,.25);
-  cursor: pointer;
-  font-size: 20px;
-}
-#lb .ctrl{
+
+#lb .ctrl, #lb .close {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-#lb .prev{ left: -6px; }
-#lb .next{ right: -6px; }
-#lb .counter{
-  grid-column: 2;
-  grid-row: 3;
-  justify-self: center;
-  padding: 6px 10px;
-  font-size: 13px;
-  color: #fff;
-  background: #00000055;
-  border-radius: 999px;
+  background: white;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  z-index: 10;
 }
 
-/* ===============================
-   Responsive fine-tuning
-==================================*/
+#lb .close { top: 20px; right: 20px; }
+#lb .prev { left: 15px; top: 50%; transform: translateY(-50%); }
+#lb .next { right: 15px; top: 50%; transform: translateY(-50%); }
 
-/* ===============================
-   Responsive fine-tuning (Mobile)
-==================================*/
-@media (max-width: 720px){
-  /* dimensioni più compatte del nastro su mobile */
-  .postcard::before,
-  .postcard::after{
-    --tape-w: 82px;
-    --tape-h: 22px;
-    width: var(--tape-w);
-    height: var(--tape-h);
-    box-shadow: 0 3px 8px rgba(0,0,0,.16);
-    left: auto;  /* evita offset orfani */
-    right: auto; /* evita offset orfani */
-  }
+#lb .counter {
+  position: absolute;
+  bottom: 20px;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  padding: 5px 15px;
+  border-radius: 20px;
+}
 
-  /* ===== Pattern 1 (3n+1) – due nastri: top e bottom centrati ===== */
-  .grid .postcard:nth-child(3n+1)::before{
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%) rotate(-8deg);
+/* Responsive per Lightbox su Mobile */
+@media (max-width: 600px) {
+  #lb .ctrl {
+    bottom: 80px;
+    top: auto;
+    transform: none;
   }
-  .grid .postcard:nth-child(3n+1)::after{
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%) rotate(8deg);
-  }
-
-  /* ===== Pattern 2 (3n+2) – singolo nastro centrato in alto ===== */
-  .grid .postcard:nth-child(3n+2)::before{
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%) rotate(-3deg);
-    width: calc(var(--tape-w) + 24px); /* leggermente più largo */
-  }
-  .grid .postcard:nth-child(3n+2)::after{
-    display: none;
-  }
-
-  /* ===== Pattern 3 (3n+3) – due nastri agli angoli interni ===== */
-  .grid .postcard:nth-child(3n+3)::before{
-    top: -2px;
-    left: 18rem;
-    transform: rotate(30deg);
-    width: var(--tape-w);
-  }
-  .grid .postcard:nth-child(3n+3)::after{
-    bottom: -10px;
-    right: 12px;               /* vicino all’angolo destro */
-    transform: rotate(30deg);
-    width: var(--tape-w);
-  }
+  #lb .prev { left: 30px; }
+  #lb .next { right: 30px; }
 }
