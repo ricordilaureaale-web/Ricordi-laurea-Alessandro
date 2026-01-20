@@ -5,13 +5,29 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ricordi Laurea Alessandro</title>
   <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Aggiunto per gestire la visibilità dello spinner e dei tasti */
+    .hidden { display: none !important; }
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
- <div class="card">
+  <div class="card">
     <h1>Hey Ciao 👋</h1>
     <p class="sub">Se mi dedichi 2 minuti possiamo creare un bel ricordo per tutti di questa serata</p>
 
     <div class="progress-wrap"><div class="progress" id="progress" style="width:0%"></div></div>
+    
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
     <form id="gform" action="https://docs.google.com/forms/d/1JQi4mdeecui8nj6S-6AUXiQNHUa4u7MHgdYqvoF4xag/formResponse" method="POST" target="hidden_iframe" novalidate>
@@ -32,8 +48,6 @@
       <section class="step" data-step="2">
         <label for="ricordo">Mi lasci un ricordo di stasera?</label>
         <textarea id="ricordo" name="entry.476871126" placeholder="Scrivi qualcosa…"></textarea>
-        <input type="hidden" name="fvv" value="1" />
-        <input type="hidden" name="pageHistory" value="0" />
         <div class="actions">
           <button type="button" class="btn secondary" id="back2">Indietro</button>
           <button type="button" class="btn primary" id="next2">Avanti</button>
@@ -80,264 +94,177 @@
       </section>
     </form>
     <footer>Le tue risposte vengono registrate tramite Google Forms.</footer>
-</div>
+  </div>
 
   <script>
-    (function(){
-      const steps = Array.from(document.querySelectorAll('.step'));
-      const progress = document.getElementById('progress');
-      const form = document.getElementById('gform');
-      const nome = document.getElementById('nome');
-      const codiceInput = document.getElementById('codiceRisposta');
-      const confirmMsg = document.getElementById('confirmMsg');
-      const err1 = document.getElementById('err-step1');
-      const openUpload = document.getElementById('openUpload');
-      const btnUpload = document.getElementById('btnUpload');
-      const iFrame = document.getElementById('hidden_iframe');
+    (function() {
+        const CFG = {
+            SHEET_FOTO_ID: '1ED2xiPv_JhCs33ylJNoAPOb6d2o88ddGJl-zp9am2II',
+            GID_FOTO: '1627790501'
+        };
 
-      let current = 0;
-      const total = steps.length;
+        const steps = Array.from(document.querySelectorAll('.step'));
+        const progress = document.getElementById('progress');
+        const form = document.getElementById('gform');
+        const iFrame = document.getElementById('hidden_iframe');
+        const nome = document.getElementById('nome');
+        const codiceInput = document.getElementById('codiceRisposta');
+        const confirmMsg = document.getElementById('confirmMsg');
+        const openUploadBtn = document.getElementById('openUpload');
+        const skipPhotosBtn = document.getElementById('skipPhotos');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const next3 = document.getElementById('next3');
+        const fotoNotice = document.getElementById('fotoNotice');
 
-      function showStep(idx){
-        steps.forEach((s, i) => s.classList.toggle('active', i === idx));
-        const pct = Math.round((idx / (total - 1)) * 100);
-        progress.style.width = pct + '%';
-      }
+        let current = 0;
+        const total = steps.length;
+        let pollId = null;
+        let popupWin = null;
 
-      // Navigazione Step 1 -> 2
-      document.getElementById('next1').addEventListener('click', () => {
-        if (!nome.value.trim()) {
-          err1.classList.add('show');
-          return;
+        function showStep(idx) {
+            steps.forEach((s, i) => s.classList.toggle('active', i === idx));
+            const pct = Math.round((idx / (total - 1)) * 100);
+            progress.style.width = pct + '%';
         }
-        err1.classList.remove('show');
-        current = 1; showStep(current);
-      });
 
-      // Navigazione Step 2 -> 3
-      document.getElementById('next2').addEventListener('click', () => {
-        if (!codiceInput.value) codiceInput.value = makeCode();
-        current = 2; showStep(current);
-      });
-      document.getElementById('back2').addEventListener('click', () => {
-        current = 0; showStep(current);
-      });
-
-      // Navigazione Step 3 -> 4
-      document.getElementById('next3').addEventListener('click', () => {
-        confirmMsg.textContent = `Ok ${nome.value.trim()}, premi "Invia" per salvare il tuo ricordo.`;
-        current = 3; showStep(current);
-      });
-      document.getElementById('back3').addEventListener('click', () => {
-        current = 1; showStep(current);
-      });
-
-      // Navigazione Step 4 -> indietro
-      document.getElementById('back4').addEventListener('click', () => {
-        current = 2; showStep(current);
-      });
-
-      // Ricompila
-      document.getElementById('backToStart').addEventListener('click', () => {
-        form.reset();
-        codiceInput.value = '';
-        current = 0; showStep(current);
-      });
-
-      // Caricamento Foto
-      openUpload.addEventListener('click', () => {
-        if (!codiceInput.value) codiceInput.value = makeCode();
-        const url = buildFotoUrl(codiceInput.value);
-        const popup = window.open(url, 'upload_foto', 'width=520,height=760');
-        if (!popup) {
-          btnUpload.href = url;
-          btnUpload.classList.remove('hidden');
+        function updateSummary() {
+            const valNome = nome.value.trim();
+            confirmMsg.textContent = valNome 
+                ? `Ok ${valNome}, premi "Invia" per salvare il tuo ricordo.` 
+                : `Premi "Invia" per salvare il tuo ricordo.`;
         }
-        document.getElementById('fotoNotice').textContent = "Caricamento aperto! Premi 'Ho finito' quando hai caricato tutto.";
-      });
 
-      // Gestione Invio
-      let submitted = false;
-      form.addEventListener('submit', () => {
-        submitted = true;
-        document.getElementById('btnSubmit').disabled = true;
-        document.getElementById('btnSubmit').textContent = "Invio...";
-      });
+        // --- Navigazione ---
+        document.getElementById('next1').addEventListener('click', () => {
+            current = 1; showStep(current);
+        });
 
-      iFrame.addEventListener('load', () => {
-        if (submitted) {
-          current = 4; showStep(current);
-          submitted = false;
-        }
-      });
-    })();
+        document.getElementById('next2').addEventListener('click', () => {
+            if (!codiceInput.value) codiceInput.value = makeCode();
+            current = 2; showStep(current);
+        });
 
-    function makeCode() {
-      return 'R' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7).toUpperCase();
-    }
+        document.getElementById('back2').addEventListener('click', () => {
+            current = 0; showStep(current);
+        });
 
-    function buildFotoUrl(codice) {
-      const BASE = "https://docs.google.com/forms/d/1ogcXWlD7glhcYIX1KIxoPAGZkByk2bG_c9s-KnfnM4E/viewform";
-      return `${BASE}?usp=pp_url&entry.496785438=${codice}`;
-    }
-  </script>
-</body>
-</html>
+        // --- Gestione FOTO (Step 3) ---
+        openUploadBtn.addEventListener('click', () => {
+            if (!codiceInput.value) codiceInput.value = makeCode();
+            const url = buildFotoUrl(codiceInput.value);
+            popupWin = window.open(url, 'upload_foto', 'width=520,height=760');
+            
+            openUploadBtn.classList.add('hidden');
+            skipPhotosBtn.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+            fotoNotice.textContent = "In attesa delle foto...";
+            
+            startPolling();
+        });
 
-  <script>
-(function() {
-    const CFG = {
-        SHEET_FOTO_ID: '1ED2xiPv_JhCs33ylJNoAPOb6d2o88ddGJl-zp9am2II',
-        GID_FOTO: '1627790501'
-    };
+        skipPhotosBtn.addEventListener('click', () => {
+            if (!codiceInput.value) codiceInput.value = "SKIP-" + Date.now().toString(36).toUpperCase();
+            updateSummary();
+            current = 3; showStep(current);
+        });
 
-    const steps = Array.from(document.querySelectorAll('.step'));
-    const progress = document.getElementById('progress');
-    const form = document.getElementById('gform');
-    const iFrame = document.getElementById('hidden_iframe');
-    const nome = document.getElementById('nome');
-    const codiceInput = document.getElementById('codiceRisposta');
-    const confirmMsg = document.getElementById('confirmMsg');
-    const openUploadBtn = document.getElementById('openUpload');
-    const skipPhotosBtn = document.getElementById('skipPhotos');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const next3 = document.getElementById('next3');
-    const fotoNotice = document.getElementById('fotoNotice');
+        next3.addEventListener('click', () => {
+            updateSummary();
+            current = 3; showStep(current);
+        });
 
-    let current = 0;
-    const total = steps.length;
-    let pollId = null;
-    let popupWin = null;
+        document.getElementById('back3').addEventListener('click', () => {
+            current = 1; showStep(current);
+        });
 
-    function showStep(idx) {
-        steps.forEach((s, i) => s.classList.toggle('active', i === idx));
-        const pct = idx === 0 ? 0 : Math.round((idx / (total - 1)) * 100);
-        progress.style.width = pct + '%';
-    }
+        document.getElementById('back4').addEventListener('click', () => {
+            current = 2; showStep(current);
+        });
 
-    function updateSummary() {
-        const valNome = nome.value.trim();
-        confirmMsg.textContent = valNome 
-            ? `Ok ${valNome}, premi "Invia" per salvare il tuo ricordo.` 
-            : `Premi "Invia" per salvare il tuo ricordo.`;
-    }
+        // --- Invio e Reset ---
+        document.getElementById('backToStart').addEventListener('click', () => {
+            form.reset();
+            current = 0;
+            showStep(current);
+        });
 
-    // Navigazione
-    document.getElementById('next1').addEventListener('click', () => {
-        current = 1; showStep(current);
-    });
+        let submitted = false;
+        form.addEventListener('submit', (e) => {
+            submitted = true;
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = "Invio...";
+            // L'invio avviene tramite l'iframe target
+        });
 
-    document.getElementById('next2').addEventListener('click', () => {
-        if (!codiceInput.value) codiceInput.value = makeCode();
-        current = 2; showStep(current);
-    });
-
-    document.getElementById('back2').addEventListener('click', () => {
-        current = 0; showStep(current);
-    });
-
-    // Gestione FOTO
-    openUploadBtn.addEventListener('click', () => {
-        if (!codiceInput.value) codiceInput.value = makeCode();
-        const url = buildFotoUrl(codiceInput.value);
-        popupWin = window.open(url, 'upload_foto', 'width=520,height=760');
-        
-        openUploadBtn.classList.add('hidden');
-        skipPhotosBtn.classList.add('hidden');
-        loadingSpinner.classList.remove('hidden');
-        fotoNotice.textContent = "In attesa delle foto...";
-        
-        startPolling();
-    });
-
-    skipPhotosBtn.addEventListener('click', () => {
-        if (!codiceInput.value) codiceInput.value = "SKIP-" + Date.now().toString(36).toUpperCase();
-        updateSummary();
-        current = 3; showStep(current);
-    });
-
-    next3.addEventListener('click', () => {
-        updateSummary();
-        current = 3; showStep(current);
-    });
-
-    document.getElementById('back3').addEventListener('click', () => {
-        current = 1; showStep(current);
-    });
-
-    document.getElementById('back4').addEventListener('click', () => {
-        current = 2; showStep(current);
-    });
-
-    // Invio e Reset
-    document.getElementById('backToStart').addEventListener('click', () => {
-        form.reset();
-        current = 0; showStep(current);
-    });
-
-    let submitted = false;
-    form.addEventListener('submit', () => {
-        submitted = true;
-        document.getElementById('btnSubmit').disabled = true;
-        document.getElementById('btnSubmit').textContent = "Invio...";
         iFrame.addEventListener('load', () => {
             if (submitted) {
                 current = 4; showStep(current);
                 submitted = false;
             }
-        }, { once: true });
-    });
-
-    // Funzioni di polling/controllo
-    async function checkPhotosOnce() {
-        const code = codiceInput.value;
-        try {
-            const res = await gvizCheckPhotosByCode(code);
-            if (res.count > 0) {
-                if (popupWin && !popupWin.closed) popupWin.close();
-                loadingSpinner.classList.add('hidden');
-                fotoNotice.style.color = "#2ecc71";
-                fotoNotice.textContent = "✅ Foto ricevute!";
-                next3.classList.remove('hidden');
-                clearInterval(pollId);
-                setTimeout(() => { if(current === 2) { updateSummary(); current = 3; showStep(current); } }, 1500);
-            }
-        } catch (e) {}
-    }
-
-    function startPolling() {
-        if(pollId) clearInterval(pollId);
-        pollId = setInterval(checkPhotosOnce, 4000);
-    }
-
-    async function gvizCheckPhotosByCode(code) {
-        const cbName = `__cb_${Date.now()}`;
-        return new Promise(resolve => {
-            window[cbName] = (json) => {
-                const rows = json.table.rows.filter(r => {
-                    const val = r.c[0]?.v || ''; // Assume colonna 0 per il codice
-                    return String(val).trim().toUpperCase() === code.toUpperCase();
-                });
-                resolve({ count: rows.length });
-                delete window[cbName];
-            };
-            const url = `https://docs.google.com/spreadsheets/d/${CFG.SHEET_FOTO_ID}/gviz/tq?gid=${CFG.GID_FOTO}&tqx=out:json;responseHandler:${cbName}`;
-            const s = document.createElement('script');
-            s.src = url;
-            document.body.appendChild(s);
-            setTimeout(() => s.remove(), 1000);
         });
-    }
-})();
 
-function makeCode() {
-    return 'R' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8).toUpperCase();
-}
+        // --- Logica Automazione Foto ---
+        async function checkPhotosOnce() {
+            const code = codiceInput.value;
+            try {
+                const res = await gvizCheckPhotosByCode(code);
+                if (res.count > 0) {
+                    if (popupWin && !popupWin.closed) popupWin.close();
+                    loadingSpinner.classList.add('hidden');
+                    fotoNotice.style.color = "#2ecc71";
+                    fotoNotice.textContent = "✅ Foto ricevute!";
+                    next3.classList.remove('hidden');
+                    clearInterval(pollId);
+                    // Passa allo step conferma automaticamente dopo 1.5s
+                    setTimeout(() => { 
+                      if(current === 2) { 
+                        updateSummary(); 
+                        current = 3; 
+                        showStep(current); 
+                      } 
+                    }, 1500);
+                }
+            } catch (e) {}
+        }
 
-function buildFotoUrl(codice) {
-    const BASE = "https://docs.google.com/forms/d/1ogcXWlD7glhcYIX1KIxoPAGZkByk2bG_c9s-KnfnM4E/viewform";
-    return `${BASE}?usp=pp_url&entry.496785438=${codice}`;
-}
+        function startPolling() {
+            if(pollId) clearInterval(pollId);
+            pollId = setInterval(checkPhotosOnce, 4000);
+        }
 
+        function makeCode() {
+            return 'R' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8).toUpperCase();
+        }
 
+        function buildFotoUrl(codice) {
+            const BASE = "https://docs.google.com/forms/d/1ogcXWlD7glhcYIX1KIxoPAGZkByk2bG_c9s-KnfnM4E/viewform";
+            return `${BASE}?usp=pp_url&entry.496785438=${codice}`;
+        }
 
+        async function gvizCheckPhotosByCode(code) {
+            const cbName = `__cb_${Date.now()}`;
+            return new Promise((resolve, reject) => {
+                window[cbName] = (json) => {
+                    const rows = json.table.rows.filter(r => {
+                        // Cerca il codice nelle celle della riga
+                        return r.c.some(cell => {
+                            const val = cell ? (cell.v || cell.f || '') : '';
+                            return String(val).trim().toUpperCase() === code.toUpperCase();
+                        });
+                    });
+                    resolve({ count: rows.length });
+                    delete window[cbName];
+                };
+                const url = `https://docs.google.com/spreadsheets/d/${CFG.SHEET_FOTO_ID}/gviz/tq?gid=${CFG.GID_FOTO}&tqx=out:json;responseHandler:${cbName}`;
+                const s = document.createElement('script');
+                s.src = url;
+                s.onerror = () => reject();
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 2000);
+            });
+        }
+    })();
+  </script>
+</body>
+</html>
