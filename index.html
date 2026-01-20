@@ -45,26 +45,32 @@
           <button type="button" class="btn primary" id="next2">Avanti</button>
         </div>
       </section>
-
+      
       <section class="step" data-step="3">
         <h3 style="margin:0 0 6px">Vuoi aggiungere delle foto?</h3>
-          <p class="sub">Carica i tuoi scatti nella finestra che si aprirà.</p>
-
-            <input type="hidden" id="codiceRisposta" name="entry.697726659">
-
-        <div id="statusContainer" style="margin: 20px 0; text-align: center;">
-          <div id="loadingSpinner" class="hidden" style="margin-bottom: 10px;">
-            <div class="spinner"></div> <p class="sub">In attesa del caricamento...</p>
+        <p class="sub">Carica i tuoi scatti nella finestra che si aprirà, oppure procedi oltre.</p>
+      
+        <input type="hidden" id="codiceRisposta" name="entry.697726659">
+      
+        <div id="statusContainer" style="margin: 20px 0; text-align: center; min-height: 60px;">
+          <div id="loadingSpinner" class="hidden">
+            <div class="spinner"></div>
+            <p class="sub">In attesa delle foto...</p>
           </div>
-          <div id="fotoNotice" class="sub" style="font-weight: bold; color: #2ecc71;"></div>
+          <div id="fotoNotice" class="sub" style="font-weight: bold;"></div>
         </div>
       
-        <div class="actions">
+        <div class="actions" id="fotoActions">
           <button type="button" class="btn secondary" id="back3">Indietro</button>
-          <button type="button" class="btn primary" id="openUpload">Apri Caricamento</button>
-          <button type="button" class="btn next hidden" id="next3">Ho finito / Avanti</button>
+          
+          <button type="button" class="btn primary" id="openUpload">Sì, carica foto</button>
+          
+          <button type="button" class="btn secondary" id="skipPhotos" style="background: #eee; color: #666;">No, vai avanti</button>
+          
+          <button type="button" class="btn next hidden" id="next3">Procedi</button>
         </div>
-      </section>
+</section>
+      
 
       <section class="step" data-step="4">
         <h3 style="margin:0 0 6px">Conferma</h3>
@@ -312,4 +318,5 @@ function buildFotoUrl(codice) {
     p.set(ENTRY_CODE_FOTO, codice);
     return `${FORM_FOTO_BASE}?usp=pp_url&${p.toString()}`;
 }
+
 
