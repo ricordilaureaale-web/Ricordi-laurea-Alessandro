@@ -126,7 +126,7 @@
     if (/folders/.test(raw) || /photos\.google/.test(raw)) return null;
     const idMatch = raw.match(/(?:\/d\/|id=)([A-Za-z0-9_-]{20,})/);
     if (idMatch) {
-      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1200`;
+      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1200&authuser=0`;
     }
     return null;
   }
@@ -189,5 +189,6 @@
   loadJSONP('onGVizFoto', CFG.FOTO_SHEET_ID, CFG.FOTO_GID);
 
 })();
+
 
 
