@@ -324,7 +324,20 @@ footer {
   animation: spin 1s linear infinite;
   display: inline-block;
 }
+/* Layout per la galleria su telefono */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Adatta le foto alla larghezza del telefono */
+  gap: 8px;
+  margin-top: 10px;
+}
 
+.gallery .ph img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover; /* Evita che le foto si schiaccino o si allunghino */
+  border-radius: 8px;
+}
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -336,4 +349,5 @@ footer {
   .row { grid-template-columns: 1fr; }
   .progress-wrap { height: 10px; }
 }
+
 
