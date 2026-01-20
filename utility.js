@@ -234,19 +234,27 @@
     });
   }
 
-  async function gvizCheckPhotosByCode(code){
-    try {
-      const json = await loadJSONP('onGVizFotoCheck', SHEET_FOTO_ID, GID_FOTO);
-      if (!json || !json.table) return { count: 0 };
-      const table = json.table;
-      const codeIdx = table.cols.findIndex(c => /codice/i.test(c.label));
-      if (codeIdx < 0) return { count: 0 };
-      const rows = table.rows.filter(r => {
-        const val = r.c[codeIdx]?.v || '';
-        return String(val).trim().toUpperCase() === code.toUpperCase();
-      });
-      return { count: rows.length };
-    } catch(e) { return { count: 0 }; }
-  }
+  // MODIFICA la funzione gvizCheckPhotosByCode dentro lo script
+async function gvizCheckPhotosByCode(code) {
+    const cbName = `__cb_${Date.now()}`;
+    return new Promise((resolve) => {
+        window[cbName] = (json) => {
+            if (!json.table || !json.table.rows) { resolve({ count: 0 }); return; }
+            
+            // Cerca l'indice della colonna che si chiama "Codice Risposta"
+            const colIdx = json.table.cols.findIndex(c => /codice/i.test(c.label));
+            
+            const rows = json.table.rows.filter(r => {
+                // Se non trova l'indice, cerca in tutte le celle (più sicuro)
+                if (colIdx === -1) {
+                    return r.c.some(cell => String(cell?.v || '').trim().toUpperCase() === code.toUpperCase());
+                }
+                const val = r.c[colIdx] ? (r.c[colIdx].v || '') : '';
+                return String(val).trim().toUpperCase() === code.toUpperCase();
+            });
+            resolve({ count: rows.length });
+            delete window[cbName];
+        };
 
 })();
+
