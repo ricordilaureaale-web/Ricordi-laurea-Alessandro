@@ -191,8 +191,9 @@ h1{
 .ph img, .ph video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; 
   display: block;
+  background-color: #f0ede5; 
 }
 
 /* Testo Messaggio */
@@ -289,4 +290,33 @@ h1{
   }
   #lb .prev { left: 30px; }
   #lb .next { right: 30px; }
+}
+
+@media (max-width: 480px) {
+  .wrap {
+    padding: 12px 10px 40px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .postcard {
+    padding: 10px 10px 12px;
+  }
+
+  /* Forza la galleria a colonna singola su mobile per vedere meglio le foto */
+  .postcard .gallery {
+    grid-template-columns: 1fr !important; 
+    gap: 12px;
+  }
+
+  /* Nastri adesivi più discreti */
+  .postcard::before,
+  .postcard::after {
+    width: 60px;
+    height: 20px;
+    z-index: 1;
+  }
 }
