@@ -1,21 +1,21 @@
 :root {
-  /* Tonalità Ferrari Originali */
-  --ferrari-red: #ff2800;      
-  --ferrari-yellow: #ffeb3b;   
-  --carbon-black: #1a1a1a;     
-  --racing-green: #008c45;     
+  /* Tavolozza Ferrari */
+  --ferrari-red: #ff2800;
+  --ferrari-yellow: #ffeb3b;
+  --carbon-black: #1a1a1a;
   
-  /* Variabili Sistema */
+  /* Mappatura Variabili */
   --bg: var(--ferrari-red);
-  --card: rgba(20, 20, 20, 0.98); /* Nero profondo per staccare dal rosso */
+  --card: rgba(26, 26, 26, 0.98); /* Nero profondo per far risaltare il rosso */
   --muted: #94a3b8;
   --text: #ffffff;
   --accent: var(--ferrari-yellow);
   --accent-2: var(--ferrari-red);
   --danger: #f87171;
-  --shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   --radius: 12px;
   
+  --wall-bg: var(--ferrari-red);
   --ink: #ffffff;
   --paper: #2a2a2a; 
 }
@@ -25,17 +25,15 @@
 body {
   margin: 0;
   color: var(--ink);
-  font: 16px/1.5 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  
-  /* SFONDO ROSSO CORSA CON LOGO */
-  background-color: var(--ferrari-red);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+  background-color: var(--ferrari-red); 
   background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), 
-    url("logoAle.png");
-  background-size: 110px;
+    linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), /* Overlay scuro per profondità */
+    url("logoAle.png"); 
+  background-size: 100px 130px; 
   background-repeat: repeat;
-  background-attachment: fixed;
-  
+  background-attachment: fixed; 
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -45,125 +43,150 @@ body {
 
 .card {
   width: min(680px, 92vw);
-  background: var(--card); 
-  border-top: 5px solid var(--ferrari-yellow); /* "Striscia" racing superiore */
+  background: var(--card);
+  border: 2px solid var(--ferrari-yellow); /* Bordo giallo Modena */
   border-radius: var(--radius);
-  padding: 30px;
+  padding: 28px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(15px);
-  position: relative;
-  overflow: hidden;
-}
-
-/* ===== LOGICA MULTI-STEP (Fondamentale) ===== */
-/* Nasconde tutti gli step di default */
-.step { 
-  display: none; 
+  backdrop-filter: blur(10px);
+  display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
 }
 
-/* Mostra solo lo step che ha la classe .active */
-.step.active { 
-  display: flex; 
-  animation: slideIn 0.4s ease-out; 
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-/* ===== Progress Bar Racing ===== */
-.progress-wrap {
-  width: 100%;
-  height: 8px;
-  background: #333;
-  border-radius: 10px;
-  margin-bottom: 30px;
-}
-.progress {
-  height: 100%;
-  background: var(--ferrari-yellow);
-  width: 0%; /* Gestito via JavaScript */
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
-}
-
-/* ===== Campi di Compilazione ===== */
-input, textarea, select {
-  width: 100%;
-  background: var(--paper);
-  border: 1px solid #444;
-  color: white;
-  padding: 15px;
-  border-radius: 8px;
-  margin-top: 10px;
-  font-size: 1rem;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--ferrari-yellow);
-  box-shadow: 0 0 0 2px rgba(255, 235, 59, 0.2);
-}
-
-/* ===== Pulsanti di Navigazione ===== */
-.actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 25px;
-  width: 100%;
-  justify-content: center;
-}
-
-.btn {
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-weight: 700;
+h1 { 
+  margin: 0 0 6px; 
+  color: var(--ferrari-yellow); 
   text-transform: uppercase;
-  cursor: pointer;
-  border: none;
-  transition: 0.2s;
+  font-style: italic; /* Stile racing */
 }
 
-/* Tasto Avanti */
-.btn.primary, .btn.next {
-  background: var(--ferrari-red);
-  color: white;
-}
-
-/* Tasto Indietro */
-.btn.secondary {
-  background: #444;
+p.sub {
+  margin: 0.25rem 0 1.25rem;
   color: #ccc;
 }
 
-.btn:hover {
-  transform: scale(1.03);
-  filter: brightness(1.1);
+/* ===== Progress bar Ferrari Style ===== */
+.progress-wrap {
+  width: 100%;
+  max-width: 560px;
+  height: 10px;
+  background: #333; /* Sfondo scuro barra */
+  border: 1px solid #444;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 10px auto 18px;
+  position: relative;
+}
+.progress {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--ferrari-yellow);
+  box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+  transition: width 0.35s ease;
 }
 
-/* ===== Radio Buttons (Scelte multiple) ===== */
+/* ===== Step (logica invariata) ===== */
+.step { display: none; animation: fade 0.25s ease; }
+.step.active {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.step .row, .step label, .step input, .step textarea, .step .actions, .step .sub {
+  width: min(560px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ===== Form controls Racing ===== */
+label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #eee; }
+
+input, select, textarea {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #2a2a2a; /* Campi scuri */
+  color: #fff;
+  outline: none;
+  font-size: 1rem;
+}
+input::placeholder { color: #666; }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--ferrari-yellow);
+  background: #333;
+}
+
+/* ===== Buttons Racing ===== */
+.btn {
+  appearance: none;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.btn.primary {
+  background: var(--ferrari-red);
+  color: #fff;
+}
+.btn.primary:hover { background: #d42200; transform: scale(1.02); }
+
+button.btn.secondary[id^="back"] {
+  background: #444;
+  color: #fff;
+}
+
+.btn.next, .btn.start { 
+  background: #008c45; /* Verde Italia per confermare */
+  color: #fff; 
+}
+
+/* ===== Radio Options Ferrari ===== */
 .options-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
   width: 100%;
-  margin-top: 15px;
 }
 
 .radio {
   background: #222;
+  color: #fff;
   border: 2px solid #444;
-  padding: 15px;
   border-radius: 10px;
+  padding: 16px;
   cursor: pointer;
-  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
-.radio:has(input:checked) {
+.radio:hover { border-color: var(--ferrari-yellow); }
+
+.radio:has(input[type="radio"]:checked) {
   border-color: var(--ferrari-yellow);
-  background: rgba(255, 235, 59, 0.05);
+  background: rgba(255, 235, 59, 0.1);
+  color: var(--ferrari-yellow);
+}
+
+/* Footer & Utilities */
+.greeting { color: var(--ferrari-yellow); font-weight: 800; }
+.spinner { border-left-color: var(--ferrari-red); }
+
+@media (max-width: 560px) {
+  .row { grid-template-columns: 1fr; }
 }
