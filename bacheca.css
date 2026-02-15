@@ -1,15 +1,15 @@
 /* ===============================
-   BACHECA – Stile Racing Ferrari
+    BACHECA – Stile Racing Ferrari
 ==================================*/
 
-:root{
+:root {
   --ferrari-red: #ff2800;      /* Rosso Corsa */
   --ferrari-yellow: #ffeb3b;   /* Giallo Modena */
   --carbon-black: #1a1a1a;     /* Nero Tecnico */
   
   --wall-bg: var(--ferrari-red); 
-  --ink: #ffffff;             /* Testo bianco su card scure */
-  --muted: #94a3b8;           
+  --ink: #ffffff;              /* Testo bianco su card scure */
+  --muted: #94a3b8;            
   --accent: var(--ferrari-yellow);
   --paper: var(--carbon-black); /* Le card diventano nere carbonio */
   --paper-edge: #333333;
@@ -18,31 +18,30 @@
   --radius: 10px;
 }
 
-html, body{
+html, body {
   height: 100%;
   overflow-x: hidden;
 }
 
-body{
+body {
   margin: 0;
   color: var(--ink);
   font: 16px/1.5 system-ui, -apple-system, sans-serif;
-  /* Sfondo Rosso Corsa solido senza logo (come richiesto per la bacheca) */
   background: var(--ferrari-red);
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap{
+.wrap {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 16px 60px;
 }
 
 /* ===============================
-   Header / topbar / pill
+    Header / topbar / pill
 ==================================*/
 
-header{
+header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -50,22 +49,22 @@ header{
   margin-bottom: 10px;
 }
 
-h1{
+h1 {
   font-size: clamp(24px, 3.2vw, 38px);
   margin: 0 0 6px;
   color: var(--ferrari-yellow);
   text-transform: uppercase;
-  font-style: italic; /* Stile dinamico Racing */
+  font-style: italic;
   letter-spacing: 1px;
 }
 
-.sub{
+.sub {
   margin: 0;
   color: #fff;
   opacity: 0.9;
 }
 
-.pill{
+.pill {
   background: var(--carbon-black);
   border: 1px solid var(--ferrari-yellow);
   color: var(--ferrari-yellow);
@@ -75,7 +74,9 @@ h1{
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-.btn{
+.topbar { margin-bottom: 20px; }
+
+.btn {
   display: inline-block;
   text-decoration: none;
   padding: 10px 18px;
@@ -87,16 +88,16 @@ h1{
   transition: transform .1s ease, box-shadow .2s ease;
 }
 
-.btn:hover{
+.btn:hover {
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
 }
 
 /* ===============================
-   Griglia bacheca
+    Griglia bacheca (PC)
 ==================================*/
 
-.grid{
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: clamp(16px, 3vw, 24px);
@@ -104,39 +105,36 @@ h1{
 }
 
 /* ===============================
-   Card CARBON (Ex Polaroid)
+    Card CARBON
 ==================================*/
 
-.postcard{
+.postcard {
   position: relative;
-  background: var(--paper); /* Nero Carbonio */
+  background: var(--paper);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   border: 1px solid #333;
   padding: 14px;
   transform: rotate(var(--twist, 0deg));
   transition: transform .2s ease, border-color .2s ease;
+  margin-bottom: 10px; /* Spazio per masonry fallback */
 }
 
-/* Bordino superiore giallo per ogni card stile box */
-.postcard::top-line {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--ferrari-yellow);
-  border-radius: var(--radius) var(--radius) 0 0;
-}
+/* Rotazioni casuali card */
+.postcard:nth-child(4n){ --twist: -0.6deg; }
+.postcard:nth-child(4n+1){ --twist: 0.4deg; }
+.postcard:nth-child(4n+2){ --twist: -1.2deg; }
+.postcard:nth-child(4n+3){ --twist: 0.9deg; }
 
-.postcard:hover{
+.postcard:hover {
   transform: translateY(-5px) rotate(0deg);
   border-color: var(--ferrari-yellow);
   z-index: 10;
 }
 
-/* NASTRI ADESIVI (Giallo Modena) */
+/* NASTRI ADESIVI */
 .postcard::before,
-.postcard::after{
+.postcard::after {
   content: "";
   position: absolute;
   width: 70px;
@@ -145,40 +143,70 @@ h1{
   opacity: 0.8;
   border-radius: 2px;
   z-index: 2;
+  pointer-events: none;
 }
+.postcard::before { top: -10px; left: 10px; transform: rotate(-15deg); }
+.postcard::after { bottom: -10px; right: 10px; transform: rotate(-10deg); }
 
-/* Galleria Foto */
-.postcard .gallery{
+/* ===============================
+    GESTIONE IMMAGINI E VIDEO (FIX)
+==================================*/
+
+.postcard .gallery {
   display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   background: #2a2a2a;
   padding: 6px;
   border-radius: 6px;
+  margin-bottom: 10px;
 }
 
-.ph{
+/* Se c'è una sola foto occupa tutto lo spazio */
+.postcard .gallery:has(.ph:only-child) {
+  grid-template-columns: 1fr;
+}
+
+.ph {
+  margin: 0;
+  position: relative;
   background: #000;
   border: 1px solid #444;
   border-radius: 4px;
+  aspect-ratio: 4 / 3; /* Blocca la dimensione */
+  overflow: hidden;
+  width: 100%;
 }
 
-/* Testo Messaggio */
-.msg{
+.ph img, .ph video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Adatta l'immagine senza distorcerla */
+  display: block;
+  cursor: zoom-in;
+}
+
+/* ===============================
+    TESTO E DETTAGLI
+==================================*/
+
+.msg {
   margin: 15px 0 10px;
-  font-family: "Segoe UI", Roboto, sans-serif; /* Rimosso corsivo per stile tecnico */
   font-size: 15px;
   line-height: 1.5;
   text-align: left;
   color: #fff;
+  white-space: pre-wrap;
 }
 
-.when{
+.when {
   font-size: 10px;
   color: var(--muted);
   text-align: left;
+  margin-top: 10px;
 }
 
-.sig{
+.sig {
   font-size: 14px;
   text-align: right;
   font-weight: 800;
@@ -188,20 +216,68 @@ h1{
 }
 
 /* ===============================
-   LIGHTBOX
+    LIGHTBOX (ZOOM FOTO)
 ==================================*/
-#lb{
+#lb {
+  position: fixed;
+  inset: 0;
   background: rgba(0,0,0,0.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+#lb.open { display: flex; }
+
+#lb .frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#lb img {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
 
 #lb .ctrl, #lb .close {
+  position: absolute;
   background: var(--ferrari-yellow);
-  color: #000;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10;
 }
+#lb .close { top: 20px; right: 20px; }
+#lb .prev { left: 20px; }
+#lb .next { right: 20px; }
+#lb .counter { position: absolute; bottom: 20px; color: white; }
 
-/* Responsive */
-@media (max-width: 480px) {
+/* ===============================
+    RESPONSIVE (Telefono)
+==================================*/
+
+@media (max-width: 600px) {
+  .wrap { padding: 12px 10px 40px; }
+  
+  .grid {
+    grid-template-columns: 1fr; /* Una sola card per riga */
+  }
+
   .postcard .gallery {
-    grid-template-columns: 1fr !important; 
+    grid-template-columns: 1fr !important; /* Foto una sopra l'altra */
+  }
+
+  .ph {
+    aspect-ratio: 16 / 9; /* Formato più largo su mobile */
   }
 }
