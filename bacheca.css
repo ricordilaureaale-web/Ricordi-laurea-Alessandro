@@ -1,322 +1,155 @@
 /* ===============================
-   BACHECA – stile generale
+   BACHECA FERRARI – Stile Box Racing
 ==================================*/
 
-:root{
-  --wall-bg: #f5f5f0;        /* tinta base muro */
-  --ink: #2b2b2b;            /* testo principale */
-  --muted: #6b6b6b;          /* testo attenuato */
-  --accent: #4466ff10;       /* leggero accento */
-  --paper: #fffdf8;          /* bianco carta polaroid */
-  --paper-edge: #f0ede5;     /* bordo carta */
-  --shadow: 0 8px 22px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
-  --tape: #f6e7a7cc;         /* “washi” giallino trasparente */
-  --radius: 14px;
+:root {
+  /* Tonalità Ufficiali */
+  --ferrari-red: #ff2800;
+  --ferrari-yellow: #ffeb3b;
+  --carbon-black: #1a1a1a;
+  
+  /* Mappatura Variabili */
+  --wall-bg: var(--ferrari-red); /* Muro del box rosso */
+  --ink: #ffffff;
+  --muted: #cccccc;
+  --paper: #222222;            /* Card nera come il carbonio */
+  --paper-edge: #333333;
+  --shadow: 0 15px 35px rgba(0,0,0,0.5);
+  --tape: var(--ferrari-yellow); /* Lo scotch diventa striscia Gialla Racing */
+  --radius: 8px;               /* Angoli più squadrati e sportivi */
 }
 
-html, body{
+html, body {
   height: 100%;
-  overflow-x: hidden; /* Evita lo scroll orizzontale su mobile */
+  overflow-x: hidden;
+  background-color: var(--ferrari-red);
 }
 
-body{
+body {
   margin: 0;
   color: var(--ink);
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
-  background:
-    radial-gradient(circle at 25% 15%, #00000005 0 1px, transparent 1px),
-    radial-gradient(circle at 75% 85%, #00000005 0 1px, transparent 1px),
-    linear-gradient(90deg, #0000 0, #0000 47.5%, #00000006 50%, #0000 52.5%, #0000 100%),
-    var(--wall-bg);
-  background-size: 18px 18px, 18px 18px, 28px 28px, auto;
+  font: 16px/1.5 system-ui, -apple-system, sans-serif;
+  /* Rimosso pattern giallino, aggiunto rosso pieno */
+  background: var(--ferrari-red);
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap{
+.wrap {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 16px 60px;
 }
 
 /* ===============================
-   Header / topbar / pill
+   Header Ferrari Style
 ==================================*/
 
-header{
+header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--ferrari-yellow);
+  padding-bottom: 10px;
 }
 
-h1{
+h1 {
   font-size: clamp(24px, 3.2vw, 38px);
   margin: 0 0 6px;
-  letter-spacing: .3px;
+  color: var(--ferrari-yellow);
+  text-transform: uppercase;
+  font-style: italic;
 }
 
-.sub{
-  margin: 0;
-  color: var(--muted);
+.pill {
+  background: var(--carbon-black);
+  border: 1px solid var(--ferrari-yellow);
+  color: var(--ferrari-yellow);
+  padding: 8px 16px;
+  border-radius: 4px; /* Più squadrato */
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-.pill{
-  background: #ffffffb8;
-  backdrop-filter: blur(6px);
-  border: 1px solid #00000010;
-  padding: 8px 12px;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  min-width: 110px;
-  text-align: center;
+.btn {
+  background: var(--carbon-black);
+  color: var(--ferrari-yellow);
+  border: 1px solid var(--ferrari-yellow);
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
-.topbar{
-  display: flex;
-  justify-content: flex-start;
-  margin: 8px 0 18px;
-}
-
-.btn{
-  display: inline-block;
-  text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #00000012;
-  background: #fff;
-  color: #1f1f1f;
-  transition: transform .06s ease, box-shadow .2s ease;
-}
-
-.btn:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0,0,0,.10);
+.btn:hover {
+  background: var(--ferrari-yellow);
+  color: var(--carbon-black);
 }
 
 /* ===============================
-   Griglia bacheca
+   Card RACING (Ex Polaroid)
 ==================================*/
 
-.grid{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: clamp(16px, 3vw, 24px);
-  align-items: start;
-}
-
-@media (max-width: 480px) {
-  .grid {
-    grid-template-columns: 1fr; /* Una sola colonna su telefoni piccoli */
-  }
-}
-
-/* ===============================
-   Card POLAROID
-==================================*/
-
-.postcard{
+.postcard {
   position: relative;
-  background: var(--paper);
-  border-radius: calc(var(--radius) + 4px);
+  background: var(--paper); /* Sfondo Nero */
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
-  border: 1px solid var(--paper-edge);
-  padding: 14px 14px 16px;
+  border: 1px solid #444;
+  padding: 20px 14px 16px;
   transform: rotate(var(--twist, 0deg));
   transition: transform .18s ease, box-shadow .18s ease;
 }
 
-.postcard:nth-child(4n){ --twist: -0.6deg; }
-.postcard:nth-child(4n+1){ --twist: 0.4deg; }
-.postcard:nth-child(4n+2){ --twist: -1.2deg; }
-.postcard:nth-child(4n+3){ --twist: 0.9deg; }
-
-.postcard:hover{
-  transform: translateY(-3px) rotate(0deg);
-  box-shadow: 0 14px 30px rgba(0,0,0,.16);
-  z-index: 10;
+.postcard:hover {
+  transform: scale(1.03) rotate(0deg);
+  border-color: var(--ferrari-yellow);
 }
 
-/* NASTRI ADESIVI */
+/* NASTRI ADESIVI (Strisce Racing) */
 .postcard::before,
-.postcard::after{
+.postcard::after {
   content: "";
   position: absolute;
-  width: 80px;
-  height: 26px;
-  background: var(--tape);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  opacity: .9;
-  pointer-events: none;
-  border-radius: 2px;
+  width: 60px;
+  height: 12px;
+  background: var(--ferrari-yellow); /* Strisce Gialle */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 0; /* Taglio netto */
   z-index: 2;
 }
 
-/* Pattern 1: Angoli opposti */
-.grid .postcard:nth-child(3n+1)::before{ top: -10px; left: -15px; transform: rotate(-25deg); }
-.grid .postcard:nth-child(3n+1)::after{ bottom: -10px; right: -15px; transform: rotate(-25deg); }
+/* Posizioni nastri mantenute ma rese più "tecniche" */
+.grid .postcard:nth-child(3n+1)::before{ top: 5px; left: -10px; transform: rotate(-10deg); }
+.grid .postcard:nth-child(3n+1)::after{ bottom: 5px; right: -10px; transform: rotate(-10deg); }
 
-/* Pattern 2: Centrale alto */
-.grid .postcard:nth-child(3n+2)::before{ top: -15px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: 100px; }
+.grid .postcard:nth-child(3n+2)::before{ top: -6px; left: 50%; transform: translateX(-50%); width: 80%; height: 6px; }
 .grid .postcard:nth-child(3n+2)::after{ display: none; }
 
-/* Pattern 3: Angoli opposti invertiti */
-.grid .postcard:nth-child(3n+3)::before{ top: -10px; right: -15px; transform: rotate(25deg); }
-.grid .postcard:nth-child(3n+3)::after{ bottom: -10px; left: -15px; transform: rotate(25deg); }
-
-/* Galleria Foto */
-.postcard .gallery{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  background: #00000005;
-  padding: 4px;
-  border-radius: 8px;
-}
-
-.postcard .gallery:has(.ph:only-child),
-.postcard .gallery:only-child {
-  grid-template-columns: 1fr;
-}
-
-.ph{
-  margin: 0;
-  aspect-ratio: 4 / 3;
-  background: #f3f3ef;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #e8e5de;
-}
-
-.ph img, .ph video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-  display: block;
-  background-color: #f0ede5; 
-}
-
 /* Testo Messaggio */
-.msg{
-  margin: 12px 0 6px;
-  padding: 0 4px;
-  font: 500 17px/1.4 "Segoe Print", "Comic Sans MS", cursive;
-  text-align: center;
-  color: #333;
+.msg {
+  margin: 15px 0 10px;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* Rimosso corsivo, più tecnico */
+  font-size: 16px;
+  text-align: left;
+  color: #ffffff;
 }
 
-.when{
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  margin-bottom: 4px;
-}
-
-.sig{
+.sig {
   font-size: 14px;
   text-align: right;
-  font-weight: 600;
-  color: #444;
+  font-weight: 900;
+  color: var(--ferrari-red);
+  text-transform: uppercase;
+  font-style: italic;
 }
 
-/* ===============================
-   LIGHTBOX
-==================================*/
-#lb{
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.9);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  touch-action: none;
-}
-#lb.open{ display: flex; }
-
-#lb .frame{
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.ph {
+  background: #111;
+  border: 1px solid #333;
 }
 
-#lb img{
-  max-width: 95vw;
-  max-height: 80vh;
-  object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
-}
-
+/* Lightbox Ferrari Style */
 #lb .ctrl, #lb .close {
-  position: absolute;
-  background: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  z-index: 10;
-}
-
-#lb .close { top: 20px; right: 20px; }
-#lb .prev { left: 15px; top: 50%; transform: translateY(-50%); }
-#lb .next { right: 15px; top: 50%; transform: translateY(-50%); }
-
-#lb .counter {
-  position: absolute;
-  bottom: 20px;
-  color: white;
-  background: rgba(0,0,0,0.5);
-  padding: 5px 15px;
-  border-radius: 20px;
-}
-
-/* Responsive per Lightbox su Mobile */
-@media (max-width: 600px) {
-  #lb .ctrl {
-    bottom: 80px;
-    top: auto;
-    transform: none;
-  }
-  #lb .prev { left: 30px; }
-  #lb .next { right: 30px; }
-}
-
-@media (max-width: 480px) {
-  .wrap {
-    padding: 12px 10px 40px;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .postcard {
-    padding: 10px 10px 12px;
-  }
-
-  /* Forza la galleria a colonna singola su mobile per vedere meglio le foto */
-  .postcard .gallery {
-    grid-template-columns: 1fr !important; 
-    gap: 12px;
-  }
-
-  /* Nastri adesivi più discreti */
-  .postcard::before,
-  .postcard::after {
-    width: 60px;
-    height: 20px;
-    z-index: 1;
-  }
+  background: var(--ferrari-yellow);
+  color: var(--carbon-black);
 }
