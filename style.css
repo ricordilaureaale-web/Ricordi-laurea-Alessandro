@@ -120,6 +120,7 @@ input, select, textarea {
   color: #fff;
   outline: none;
   font-size: 1rem;
+  margin-bottom: 10px;
 }
 input::placeholder { color: #666; }
 input:focus, select:focus, textarea:focus {
@@ -190,3 +191,4 @@ button.btn.secondary[id^="back"] {
 @media (max-width: 560px) {
   .row { grid-template-columns: 1fr; }
 }
+
