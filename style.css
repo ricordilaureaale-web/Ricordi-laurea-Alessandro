@@ -183,7 +183,15 @@ button.btn.secondary[id^="back"] {
   background: rgba(255, 235, 59, 0.1);
   color: var(--ferrari-yellow);
 }
-
+/* ===== Contenitore Pulsanti ===== */
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 40px; /* <--- Aumenta questo valore per distanziarli di più */
+  width: 100%;
+}
 /* Footer & Utilities */
 .greeting { color: var(--ferrari-yellow); font-weight: 800; }
 .spinner { border-left-color: var(--ferrari-red); }
@@ -191,4 +199,5 @@ button.btn.secondary[id^="back"] {
 @media (max-width: 560px) {
   .row { grid-template-columns: 1fr; }
 }
+
 
