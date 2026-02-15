@@ -7,7 +7,133 @@
 }
 
 html, body {
+  margin: 0;/* ===============================
+    BOARD: Stile Box Ferrari
+==================================*/
+:root {
+  --ferrari-red: #ff2800;
+  --ferrari-yellow: #ffeb3b;
+  --carbon-black: #1a1a1a;
+  --frame-metal: #333333;
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  min-height: 100%;
+  /* Sfondo rosso Ferrari solido (senza logo come richiesto) */
+  background: var(--ferrari-red); 
+  overflow-x: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.wrap {
+  max-width: 1280px;
+  margin: 24px auto 60px;
+  padding: 15px;
+  /* Cornice che ricorda il metallo scuro dei box */
+  background: var(--frame-metal); 
+  border-radius: 12px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+#wall {
+  margin: 0;
+  padding: 22px;
+  border-radius: 8px;
+  column-width: 250px; 
+  column-gap: 20px;
+  /* Sfondo bacheca: Nero Carbonio invece del sughero */
+  background-color: var(--carbon-black);
+  background-image: 
+    linear-gradient(45deg, #222 25%, transparent 25%), 
+    linear-gradient(-45deg, #222 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #222 75%), 
+    linear-gradient(-45deg, transparent 75%, #222 75%);
+  background-size: 4px 4px; /* Effetto trama tecnica/carbonio */
+  box-shadow: inset 0 10px 30px rgba(0,0,0,0.8);
+}
+
+/* ===============================
+    POST-IT (Stile Racing)
+==================================*/
+.postcard {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 20px 0;
+  padding: 16px 14px 12px;
+  /* Post-it bianco lucido o grigio tecnico per contrastare il fondo nero */
+  background: #ffffff; 
+  border-radius: 4px;
+  border-left: 5px solid var(--ferrari-yellow); /* Dettaglio Giallo Modena */
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  position: relative;
+  break-inside: avoid;
+  transform: rotate(var(--rot, 0deg));
+  transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Puntina da disegno: diventa un bullone o una borchia nera */
+.postcard::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #444; /* Colore metallo */
+  background: radial-gradient(circle at 30% 30%, #666, #000);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  z-index: 5;
+}
+
+/* Rotazioni casuali mantenute per dinamismo */
+.postcard:nth-child(6n+1){ --rot: -1deg }
+.postcard:nth-child(6n+2){ --rot: 1deg }
+.postcard:nth-child(6n+3){ --rot: -0.5deg }
+
+.postcard:hover {
+  transform: scale(1.05) rotate(0deg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  z-index: 10;
+  border-left-color: var(--ferrari-red); /* Al passaggio del mouse diventa rosso */
+}
+
+/* Varianti Colore Post-it (Tonalità Ferrari/Italia) */
+.postcard:nth-child(4n+1){ border-left-color: var(--ferrari-yellow); } 
+.postcard:nth-child(4n+2){ border-left-color: var(--ferrari-red); }
+.postcard:nth-child(4n+3){ border-left-color: #008c45; } /* Verde Italia */
+
+/* ===============================
+    MEDIA & TESTO
+==================================*/
+.postcard .msg {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font più tecnico */
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.postcard .sig {
+  text-transform: uppercase;
+  font-style: italic;
+  color: var(--ferrari-red);
+  font-weight: 900;
+}
+
+.ph {
+  border: 1px solid #ddd;
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .wrap { margin: 10px; }
+  #wall { padding: 10px; }
+}
   padding: 0;
   min-height: 100%;
   background: #0f172a; /* Sfondo scuro per far risaltare la bacheca */
@@ -193,3 +319,4 @@ html, body {
   z-index: 10000;
   background: rgba(0,0,0,0.95);
 }
+
