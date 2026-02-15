@@ -1,5 +1,5 @@
 /* ===============================
-    BOARD: Ferrari Style
+    BOARD: Ferrari Style 
 ==================================*/
 :root {
   --ferrari-red: #ff2800;
@@ -12,16 +12,17 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  /* Sfondo rosso Ferrari per richiamare il brand fuori dalla cornice */
+  /* Sfondo rosso Ferrari per richiamare il brand */
   background: var(--ferrari-red); 
   overflow-x: hidden;
+  font-family: "Segoe UI", Roboto, Helvetica, sans-serif;
 }
 
 .wrap {
   max-width: 1280px;
   margin: 24px auto 60px;
   padding: 18px;
-  /* Cornice metallo scuro/carbonio */
+  /* Cornice metallo scuro */
   background: var(--frame-metal); 
   border-radius: 22px;
   box-shadow: 0 18px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.1);
@@ -31,9 +32,10 @@ html, body {
   margin: 0;
   padding: 22px;
   border-radius: 16px;
-  column-width: 250px; 
+  /* Effetto Masonry adattivo */
+  column-width: 280px; 
   column-gap: 20px;
-  /* Sfondo interno: trama fibra di carbonio scura */
+  /* Texture fibra di carbonio scura */
   background: 
     radial-gradient(120px 120px at 20% 30%, rgba(255,255,255,.03), transparent 60%),
     radial-gradient(2px 2px at 50% 50%, #222 40%, transparent 41%) 0 0/4px 4px,
@@ -49,10 +51,8 @@ html, body {
   width: 100%;
   margin: 0 0 20px 0;
   padding: 16px 14px 12px;
-  /* Card bianche o grigio chiarissimo per contrastare il fondo nero */
   background: #ffffff; 
   border-radius: 4px;
-  /* Bordo inferiore giallo come dettaglio racing */
   border: 1px solid rgba(0,0,0,.1);
   border-bottom: 4px solid var(--ferrari-yellow);
   box-shadow: 0 10px 20px rgba(0,0,0,.4);
@@ -62,7 +62,7 @@ html, body {
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
-/* Puntina: diventa un bullone o una borchia scura */
+/* Bullone metallico centrale */
 .postcard::after {
   content: '';
   position: absolute;
@@ -72,13 +72,12 @@ html, body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #444; 
   background: radial-gradient(circle at 30% 30%, #666, #111);
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   z-index: 5;
 }
 
-/* Effetto ombra racing sulla piega */
+/* Ombra sulla piega */
 .postcard::before {
   content: '';
   position: absolute;
@@ -90,7 +89,7 @@ html, body {
   pointer-events: none;
 }
 
-/* Gestione rotazioni (invariata) */
+/* Rotazioni casuali */
 .postcard:nth-child(6n+1){ --rot: -1.2deg }
 .postcard:nth-child(6n+2){ --rot: 0.8deg }
 .postcard:nth-child(6n+3){ --rot: -0.5deg }
@@ -102,23 +101,54 @@ html, body {
   transform: translateY(-4px) rotate(0deg);
   box-shadow: 0 15px 30px rgba(0,0,0,.5);
   z-index: 10;
-  border-bottom-color: var(--ferrari-red); /* Cambia in rosso al passaggio */
+  border-bottom-color: var(--ferrari-red);
 }
 
-/* Varianti Colore Racing (Tricolore e Giallo) */
+/* Varianti Colore Bordo Racing */
 .postcard:nth-child(10n+3){ border-bottom-color: var(--ferrari-red); } 
 .postcard:nth-child(10n+5){ border-bottom-color: #008c45; } /* Verde Italia */
-.postcard:nth-child(10n+7){ background: #f9f9f9; } 
 .postcard:nth-child(10n+9){ border-bottom-color: var(--ferrari-yellow); }
 
 /* ===============================
-    GALLERY & MEDIA
+    GALLERY & MEDIA (Gestione Immagini)
 ==================================*/
+.postcard .gallery {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  width: 100%;
+}
+
+/* Layout adattivo: 1 colonna se sola, 2 se multiple */
+.postcard .gallery:has(> .ph:only-child) { grid-template-columns: 1fr; }
+.postcard .gallery:not(:has(> .ph:only-child)) { grid-template-columns: 1fr 1fr; }
+
+
 .ph {
+  margin: 0;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3; /* Forza il riquadro a non esplodere */
   background: #000;
   border-radius: 2px;
-  /* Bordo sottile nero stile pellicola */
   border: 1px solid #111;
+  overflow: hidden; /* Fondamentale per contenere le foto giganti */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.ph img, .ph video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Riempie il riquadro tagliando l'eccesso senza deformare */
+  display: block;
+  cursor: zoom-in;
+  transition: transform .3s ease;
+}
+
+.ph:hover img {
+  transform: scale(1.08);
 }
 
 /* ===============================
@@ -127,8 +157,6 @@ html, body {
 .postcard .msg {
   white-space: pre-wrap;
   line-height: 1.4;
-  /* Font più pulito e moderno (meno "manuale" più "ufficiale") */
-  font-family: "Segoe UI", Roboto, Helvetica, sans-serif;
   font-size: 15px;
   margin: 8px 0;
   color: #111;
@@ -138,7 +166,6 @@ html, body {
   font-size: 13px;
   font-weight: 900;
   text-align: right;
-  /* Firma in rosso Ferrari */
   color: var(--ferrari-red);
   margin-top: 10px;
   text-transform: uppercase;
@@ -153,13 +180,35 @@ html, body {
 }
 
 /* ===============================
-    RESPONSIVE
+    RESPONSIVE (PC & Smartphone)
 ==================================*/
 @media (max-width: 600px) {
-  .wrap { background: #1a1a1a; }
+  .wrap { 
+    margin: 12px 8px; 
+    padding: 10px; 
+    background: #1a1a1a; 
+  }
+
+  #wall { 
+    padding: 12px; 
+    column-width: 100%; /* Una card per riga su mobile */
+  }
+
+  /* Su telefono le foto si mettono una sotto l'altra per visibilità */
+  .postcard .gallery {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .ph {
+    aspect-ratio: 16/9; /* Formato cinema su mobile */
+  }
+
+  h1 { font-size: 22px; text-align: center; }
 }
 
 /* LIGHTBOX */
 #lb {
+  z-index: 10000;
   background: rgba(0,0,0,0.98);
 }
