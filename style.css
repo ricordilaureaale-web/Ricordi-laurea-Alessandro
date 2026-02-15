@@ -189,7 +189,7 @@ button.btn.secondary[id^="back"] {
   gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 40px; /* <--- Aumenta questo valore per distanziarli di più */
+  margin-top: 20px; /* <--- Aumenta questo valore per distanziarli di più */
   width: 100%;
 }
 /* Footer & Utilities */
@@ -199,5 +199,6 @@ button.btn.secondary[id^="back"] {
 @media (max-width: 560px) {
   .row { grid-template-columns: 1fr; }
 }
+
 
 
