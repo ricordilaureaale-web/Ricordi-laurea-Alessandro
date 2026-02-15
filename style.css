@@ -22,7 +22,7 @@ body {
   color: var(--ink);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background-color: #f53b3b; /* Colore base della bacheca */
-  background-image: url("IL_TUO_LOGO.png"); /* Inserisci qui l'URL del logo */
+  background-image: url("logoAle.png"); /* Inserisci qui l'URL del logo */
   background-size: 100px 100px; /* Dimensione di ogni singolo logo */
   background-repeat: repeat;
   background-attachment: fixed; /* Il logo resta fermo mentre scorri */
@@ -346,6 +346,7 @@ footer {
   .row { grid-template-columns: 1fr; }
   .progress-wrap { height: 10px; }
 }
+
 
 
 
