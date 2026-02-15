@@ -255,7 +255,7 @@ footer {
 /* Stile opzioni */
 .radio {
   background: #fff;
-  color: #222;
+  color: #000;
   border: 2px solid #ccc;
   border-radius: 12px;
   padding: 18px;
@@ -284,7 +284,7 @@ footer {
 .radio {
   display: block;
   background: #fff;
-  color: #222;
+  color: #000;
   border: 2px solid #ccc;
   border-radius: 12px;
   padding: 14px;
@@ -346,6 +346,7 @@ footer {
   .row { grid-template-columns: 1fr; }
   .progress-wrap { height: 10px; }
 }
+
 
 
 
