@@ -1,9 +1,6 @@
 (() => {
   'use strict';
 
-  /* ===========================
-     Configurazione ID Fogli
-  =========================== */
   const CFG = {
     TESTO_SHEET_ID: '1Pc4MJeW-uoku27QoG6F3OavLU9PiVesGGBr1fMux_EU',
     TESTO_GID: '1919851796',
@@ -19,9 +16,6 @@
     debug: document.getElementById('debug')
   };
 
-  /* ===========================
-     Stato Applicazione
-  =========================== */
   let testoRows = null;
   let fotoMap = new Map();
   let fotoLoaded = false;
@@ -31,9 +25,6 @@
   const val = c => (!c ? '' : (c.v != null ? c.v : (c.f != null ? c.f : '')));
   const safeKey = x => (x || '').trim().toUpperCase();
 
-  /* ===========================
-     Mappatura Colonne (Sincronizzata col nuovo Form)
-  =========================== */
   function mapColumnsTesto(headers) {
     const find = re => headers.findIndex(h => re.test(h));
     return {
@@ -53,18 +44,14 @@
     return { codiceIdx: codiceIdx < 0 ? 0 : codiceIdx, linkCols };
   }
 
-  /* ===========================
-     Renderizzazione
-  =========================== */
   function tryRender() {
     if (!testoRows) return;
 
-    // Ordina per data decrescente (più recenti in alto)
     const rows = testoRows
       .filter(x => x.nome || x.ricordo)
       .sort((a, b) => (b.ts?.getTime() || 0) - (a.ts?.getTime() || 0));
 
-    els.pill.textContent = `${rows.length} ricordi`;
+    if (els.pill) els.pill.textContent = `${rows.length} ricordi`;
     els.wall.innerHTML = '';
     els.empty.style.display = rows.length ? 'none' : 'block';
 
@@ -79,7 +66,7 @@
         <div class="gallery">
           ${imgs.map(u => `
             <figure class="ph">
-              <img src="${esc(u)}" alt="Foto di ${firma}" loading="lazy" crossorigin="anonymous">
+              <img src="${esc(u)}" alt="Foto di ${firma}" loading="lazy">
             </figure>
           `).join('')}
         </div>` : '';
@@ -101,7 +88,6 @@
 
     els.wall.appendChild(frag);
 
-    // Attacca gestore Lightbox se non presente
     if (!wallHandlerAttached) {
       els.wall.addEventListener('click', handleGalleryClick);
       wallHandlerAttached = true;
@@ -117,43 +103,35 @@
     if (window.openLightbox) window.openLightbox(photos, idx);
   }
 
-  /* ===========================
-     Drive & JSONP Logic
-  =========================== */
   function normalizeDrive(url) {
     if (!url) return null;
     const raw = String(url).trim();
-    // Esclude cartelle o link non validi
     if (/folders/.test(raw) || /photos\.google/.test(raw)) return null;
-    
-    // Estrae l'ID del file
     const idMatch = raw.match(/(?:\/d\/|id=)([A-Za-z0-9_-]{20,})/);
     if (idMatch) {
-      // FORMATO OTTIMIZZATO PER SAFARI:
-      // Usiamo il link diretto 'uc' invece del thumbnail per evitare blocchi privacy
-      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+      // Usiamo il formato thumbnail sz=w1200 che è il più stabile per Safari
+      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1200`;
     }
     return null;
-  }}
+  }
 
   function loadJSONP(handlerName, sheetId, gid) {
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${handlerName}&gid=${gid}&_=${Date.now()}`;
+    // Rimosso il timestamp dinamico finale che Safari può bloccare
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${handlerName}&gid=${gid}`;
     const s = document.createElement('script');
     s.src = url;
     s.id = `gviz_${handlerName}`;
     document.body.appendChild(s);
   }
 
-  /* ===========================
-     Callback Globali
-  =========================== */
   window.onGVizTesto = function(json) {
+    if (!json || !json.table) return;
     const table = json.table;
     const headers = table.cols.map(c => (c.label || '').trim());
     const idx = mapColumnsTesto(headers);
 
     testoRows = table.rows.map(r => ({
-      ts: r.c[idx.ts]?.v ? new Date(r.c[idx.ts].v) : null,
+      ts: r.c[idx.ts]?.v ? (typeof r.c[idx.ts].v === 'string' ? new Date(r.c[idx.ts].v) : r.c[idx.ts].v) : null,
       nome: val(r.c[idx.nome]),
       ricordo: val(r.c[idx.ricordo]),
       codice: val(r.c[idx.codice])
@@ -162,6 +140,7 @@
   };
 
   window.onGVizFoto = function(json) {
+    if (!json || !json.table) return;
     const table = json.table;
     const headers = table.cols.map(c => (c.label || '').trim());
     const { codiceIdx, linkCols } = mapColumnsFotoAll(headers);
@@ -189,12 +168,7 @@
     tryRender();
   };
 
-  // Avvio
   loadJSONP('onGVizTesto', CFG.TESTO_SHEET_ID, CFG.TESTO_GID);
   loadJSONP('onGVizFoto', CFG.FOTO_SHEET_ID, CFG.FOTO_GID);
 
 })();
-
-
-
-
