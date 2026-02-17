@@ -79,7 +79,7 @@
         <div class="gallery">
           ${imgs.map(u => `
             <figure class="ph">
-              <img src="${esc(u)}" alt="Foto di ${firma}" loading="lazy">
+              <img src="${esc(u)}" alt="Foto di ${firma}" loading="lazy" crossorigin="anonymous">
             </figure>
           `).join('')}
         </div>` : '';
@@ -123,13 +123,18 @@
   function normalizeDrive(url) {
     if (!url) return null;
     const raw = String(url).trim();
+    // Esclude cartelle o link non validi
     if (/folders/.test(raw) || /photos\.google/.test(raw)) return null;
+    
+    // Estrae l'ID del file
     const idMatch = raw.match(/(?:\/d\/|id=)([A-Za-z0-9_-]{20,})/);
     if (idMatch) {
-      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1200&authuser=0`;
+      // FORMATO OTTIMIZZATO PER SAFARI:
+      // Usiamo il link diretto 'uc' invece del thumbnail per evitare blocchi privacy
+      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
     }
     return null;
-  }
+  }}
 
   function loadJSONP(handlerName, sheetId, gid) {
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${handlerName}&gid=${gid}&_=${Date.now()}`;
@@ -189,6 +194,7 @@
   loadJSONP('onGVizFoto', CFG.FOTO_SHEET_ID, CFG.FOTO_GID);
 
 })();
+
 
 
 
